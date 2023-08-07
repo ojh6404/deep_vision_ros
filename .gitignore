@@ -1,0 +1,9 @@
+.DS_Store
+.idea
+*.log
+.vscode
+tmp/
+
+*.pth
+*.pyc
+*.bag
