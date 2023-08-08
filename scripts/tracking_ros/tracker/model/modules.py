@@ -14,9 +14,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from track_anything_ros.tracker.model.group_modules import *
-from track_anything_ros.tracker.model import resnet
-from track_anything_ros.tracker.model.cbam import CBAM
+from tracking_ros.tracker.model.group_modules import *
+from tracking_ros.tracker.model import resnet
+from tracking_ros.tracker.model.cbam import CBAM
 
 
 class FeatureFusionBlock(nn.Module):

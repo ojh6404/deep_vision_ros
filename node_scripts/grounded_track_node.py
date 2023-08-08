@@ -10,12 +10,12 @@ from jsk_topic_tools import ConnectionBasedTransport
 
 
 from segment_anything import sam_model_registry, SamPredictor
-from track_anything_ros.tracker.base_tracker import BaseTracker
-from track_anything_ros.utils.util import (
+from tracking_ros.tracker.base_tracker import BaseTracker
+from tracking_ros.utils.util import (
     download_checkpoint,
 )
-from track_anything_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
-from track_anything_ros.utils.dino_utils import get_grounded_bbox
+from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
+from tracking_ros.utils.dino_utils import get_grounded_bbox
 
 from groundingdino.util.inference import load_model
 

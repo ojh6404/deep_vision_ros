@@ -1,18 +1,18 @@
 - name: "Toggle Label"
-  service: "/track_anything/toggle_label"
+  service: "/tracking_ros/toggle_label"
   column: 0
 - name: "Clear points"
-  service: "/track_anything/clear_points"
+  service: "/tracking_ros/clear_points"
   column: 1
 - name: "Clear masks"
-  service: "/track_anything/clear_masks"
+  service: "/tracking_ros/clear_masks"
   column: 2
 - name: "Add mask"
-  service: "/track_anything/add_mask"
+  service: "/tracking_ros/add_mask"
   column: 3
 - name: "Set embedding image"
-  service: "/track_anything/reset_embed"
+  service: "/tracking_ros/reset_embed"
   column: 4
 - name: "Track Start"
-  service: "/track_anything/track_trigger"
+  service: "/tracking_ros/track_trigger"
   column: 5

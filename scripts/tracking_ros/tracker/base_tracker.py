@@ -4,11 +4,10 @@ import numpy as np
 import torch
 from torchvision import transforms
 
-from track_anything_ros.tracker.model.network import XMem
-from track_anything_ros.tracker.inference.inference_core import InferenceCore
-from track_anything_ros.tracker.util.mask_mapper import MaskMapper
-from track_anything_ros.tracker.util.range_transform import im_normalization
-from track_anything_ros.utils.painter import mask_painter
+from tracking_ros.tracker.model.network import XMem
+from tracking_ros.tracker.inference.inference_core import InferenceCore
+from tracking_ros.tracker.util.mask_mapper import MaskMapper
+from tracking_ros.tracker.util.range_transform import im_normalization
 
 
 class BaseTracker(object):

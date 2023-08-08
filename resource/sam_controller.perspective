@@ -33,7 +33,7 @@
               "keys": {
                 "layout_param": {
                   "type": "repr",
-                  "repr": "u'package://track_anything_ros/resource/reset_button_layout.yaml'"
+                  "repr": "u'package://tracking_ros/resource/reset_button_layout.yaml'"
                 }
               },
               "groups": {}

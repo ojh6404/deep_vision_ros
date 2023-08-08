@@ -10,11 +10,11 @@ from jsk_topic_tools import ConnectionBasedTransport
 
 
 from segment_anything import sam_model_registry, SamPredictor
-from track_anything_ros.tracker.base_tracker import BaseTracker
-from track_anything_ros.utils.util import (
+from tracking_ros.tracker.base_tracker import BaseTracker
+from tracking_ros.utils.util import (
     download_checkpoint,
 )
-from track_anything_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
+from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
 
 class TrackNode(ConnectionBasedTransport):
     def __init__(self):
@@ -41,23 +41,23 @@ class TrackNode(ConnectionBasedTransport):
 
 
         self.toggle_prompt_label_service = rospy.Service(
-            "/track_anything/toggle_label", Empty, self.toggle_prompt_label_callback
+            "/tracking_ros/toggle_label", Empty, self.toggle_prompt_label_callback
         )
         self.clear_points_service = rospy.Service(
-            "/track_anything/clear_points", Empty, self.clear_points_callback
+            "/tracking_ros/clear_points", Empty, self.clear_points_callback
         )
         self.clear_masks_service = rospy.Service(
-            "/track_anything/clear_masks", Empty, self.clear_masks_callback
+            "/tracking_ros/clear_masks", Empty, self.clear_masks_callback
         )
         self.add_mask_service = rospy.Service(
-            "/track_anything/add_mask", Empty, self.add_mask_callback
+            "/tracking_ros/add_mask", Empty, self.add_mask_callback
         )
         self.reset_embed_service = rospy.Service(
-            "/track_anything/reset_embed", Empty, self.reset_embed_callback
+            "/tracking_ros/reset_embed", Empty, self.reset_embed_callback
         )
 
         self.track_trigger_service = rospy.Service(
-            "/track_anything/track_trigger", Empty, self.track_trigger_callback
+            "/tracking_ros/track_trigger", Empty, self.track_trigger_callback
         )
 
         self.bridge = CvBridge()

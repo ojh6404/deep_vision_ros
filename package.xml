@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>track_anything_ros</name>
+  <name>tracking_ros</name>
   <version>0.0.1</version>
   <description>Track-Anything ROS package</description>
 

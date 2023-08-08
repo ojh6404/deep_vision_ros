@@ -1,5 +1,5 @@
 <launch>
-  <arg name="ns" default="track_anything" />
+  <arg name="ns" default="tracking_ros" />
   <arg name="model_type" default="vit_b" />
   <arg name="device" default="cuda:0" />
   
@@ -24,7 +24,7 @@
     </node>
 
     <!-- tracking node -->
-    <include file="$(find track_anything_ros)/launch/track_node.launch" >
+    <include file="$(find tracking_ros)/launch/track_node.launch" >
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
       <arg name="input_image" value="$(arg input_image)"/>
@@ -46,9 +46,9 @@
       <remap from="event" to="image_view2/event" />
       <remap from="image_marked" to="image_marked" />
     </node>
-    <node name="track_anything_button"
+    <node name="prompter_button"
           pkg="jsk_rqt_plugins" type="rqt_tabbed_buttons" output="screen" clear_params="true">
-      <rosparam command="load" file="$(find track_anything_ros)/resource/remote_tabbed_layout.yaml" />
+      <rosparam command="load" file="$(find tracking_ros)/resource/remote_tabbed_layout.yaml" />
     </node>
 
     <!-- visualize segmentation -->

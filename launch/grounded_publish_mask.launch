@@ -1,5 +1,5 @@
 <launch>
-  <arg name="ns" default="track_anything" />
+  <arg name="ns" default="tracking_ros" />
   <arg name="model_type" default="vit_b" />
   <arg name="device" default="cuda:0" />
   <arg name="text_prompt"/>
@@ -25,7 +25,7 @@
     </node>
 
     <!-- tracking node -->
-    <include file="$(find track_anything_ros)/launch/grounded_track_node.launch" >
+    <include file="$(find tracking_ros)/launch/grounded_track_node.launch" >
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
       <arg name="text_prompt" value="$(arg text_prompt)" />

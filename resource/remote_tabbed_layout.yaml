@@ -4,4 +4,4 @@ tabbed_layout:
     name: "SAM Controller"
     namespace: push
     type: push
-    yaml_file: "package://track_anything_ros/resource/sam_controller_layout.yaml"
+    yaml_file: "package://tracking_ros/resource/sam_controller_layout.yaml"

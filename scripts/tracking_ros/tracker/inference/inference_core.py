@@ -1,8 +1,8 @@
-from track_anything_ros.tracker.inference.memory_manager import MemoryManager
-from track_anything_ros.tracker.model.network import XMem
-from track_anything_ros.tracker.model.aggregate import aggregate
+from tracking_ros.tracker.inference.memory_manager import MemoryManager
+from tracking_ros.tracker.model.network import XMem
+from tracking_ros.tracker.model.aggregate import aggregate
 
-from track_anything_ros.tracker.util.tensor_util import pad_divide_by, unpad
+from tracking_ros.tracker.util.tensor_util import pad_divide_by, unpad
 
 
 class InferenceCore:

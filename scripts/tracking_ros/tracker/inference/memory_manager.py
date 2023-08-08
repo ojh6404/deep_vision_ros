@@ -1,8 +1,8 @@
 import torch
 import warnings
 
-from track_anything_ros.tracker.inference.kv_memory_store import KeyValueMemoryStore
-from track_anything_ros.tracker.model.memory_util import *
+from tracking_ros.tracker.inference.kv_memory_store import KeyValueMemoryStore
+from tracking_ros.tracker.model.memory_util import *
 
 
 class MemoryManager:
