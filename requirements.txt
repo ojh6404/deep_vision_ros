@@ -1,10 +1,8 @@
 gdown
 gitpython
-git+https://github.com/cheind/py-thin-plate-spline
 hickle
 tensorboard
 numpy
-git+https://github.com/facebookresearch/segment-anything.git
 gradio
 opencv-python
 matplotlib
@@ -13,3 +11,14 @@ av
 openmim
 tqdm
 psutil
+torch
+torchvision
+transformers
+addict
+yapf
+timm
+supervision==0.6.0
+pycocotools
+git+https://github.com/cheind/py-thin-plate-spline
+git+https://github.com/facebookresearch/segment-anything.git
+git+https://github.com/IDEA-Research/GroundingDINO.git
