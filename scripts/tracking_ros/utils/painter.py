@@ -129,7 +129,6 @@ def bbox_drawer(image, bbox, color=None):
     # image : [H, W, C] numpy array
     # bbox : bbox [4] numpy array
     # colors : color [C] numpy array
-    # alpha : float
     # return : [H, W, C] numpy array of image
     if bbox is None:
         return image

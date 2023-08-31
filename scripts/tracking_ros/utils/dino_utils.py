@@ -40,8 +40,9 @@ def get_grounded_bbox(model, image, text_prompt, box_threshold=0.5, text_thresho
         text_threshold=text_threshold,
     )
 
+
     h, w = image_source.shape[:2]
 
     # annotated_frame = annotate(image_source=image_source, boxes=boxes, logits=logits, phrases=phrases)
     bboxes = box_convert(boxes=boxes * torch.Tensor([w, h, w, h]), in_fmt="cxcywh", out_fmt="xyxy").cpu().numpy()
-    return bboxes
+    return bboxes, phrases
