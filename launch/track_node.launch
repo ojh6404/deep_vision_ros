@@ -1,4 +1,3 @@
-
 <launch>
     <arg name="ns" default="tracking_ros" />
     <arg name="model_type" default="vit_h" />

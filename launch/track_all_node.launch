@@ -2,15 +2,13 @@
     <arg name="ns" default="tracking_ros" />
     <arg name="model_type" default="vit_h" />
     <arg name="device" default="cuda:0" />
-    <arg name="text_prompt" />
 
-    <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
     <arg name="processed_image" default="/$(arg ns)/processed_image"/>
     <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
     <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
 
     <node name="tracking_node"
-            pkg="tracking_ros" type="grounded_track_node.py"
+            pkg="tracking_ros" type="track_all_node.py"
             output="screen" >
         <remap from="~input_image" to="$(arg processed_image)" />
         <remap from="~output_image" to="$(arg segmentation_image)" />
@@ -20,8 +18,6 @@
             model_type: $(arg model_type)
             model_dir: $(find tracking_ros)/checkpoints/
             tracker_config: $(find tracking_ros)/config/tracker_config.yaml
-            dino_config: $(find tracking_ros)/config/GroundingDINO_SwinT_OGC.py
-            text_prompt: $(arg text_prompt)
         </rosparam>
     </node>
 </launch>

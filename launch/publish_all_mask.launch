@@ -23,10 +23,9 @@
     </node>
 
     <!-- tracking node -->
-    <include file="$(find tracking_ros)/launch/grounded_track_node.launch" >
+    <include file="$(find tracking_ros)/launch/track_all_node.launch" >
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
-      <arg name="text_prompt" value="$(arg text_prompt)" />
       <arg name="processed_image" value="$(arg processed_image)"/>
       <arg name="segmentation_image" value="$(arg segmentation_image)" />
       <arg name="segmentation_mask" value="$(arg segmentation_mask)" />

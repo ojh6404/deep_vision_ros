@@ -4,24 +4,23 @@ import torch
 
 import rospy
 from cv_bridge import CvBridge
+import cv2
+import time
 
 from sensor_msgs.msg import Image
 from jsk_topic_tools import ConnectionBasedTransport
 
 
-from segment_anything import sam_model_registry, SamPredictor
+from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
 from tracking_ros.tracker.base_tracker import BaseTracker
 from tracking_ros.utils.util import (
     download_checkpoint,
 )
 from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
-from tracking_ros.utils.dino_utils import get_grounded_bbox
 
-from groundingdino.util.inference import load_model
-
-class GroundedTrackNode(ConnectionBasedTransport):
+class TrackAllNode(ConnectionBasedTransport):
     def __init__(self):
-        super(GroundedTrackNode, self).__init__()
+        super(TrackAllNode, self).__init__()
 
         model_dir = rospy.get_param("~model_dir")
         tracker_config_file = rospy.get_param("~tracker_config")
@@ -29,20 +28,12 @@ class GroundedTrackNode(ConnectionBasedTransport):
 
         sam_checkpoint = download_checkpoint("sam_"+ model_type, model_dir)
         xmem_checkpoint = download_checkpoint("xmem", model_dir)
-        dino_checkpoint = download_checkpoint("dino", model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
-
-        # grounding dino
-        dino_config = rospy.get_param("~dino_config")
-        self.text_prompt = rospy.get_param("~text_prompt")
-        self.grounding_dino = load_model(dino_config, dino_checkpoint, device=self.device)
-        self.box_threshold = rospy.get_param("~box_threshold", 0.35)
-        self.text_threshold = rospy.get_param("~text_threshold", 0.25)
 
         # sam
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
-        self.predictor = SamPredictor(self.sam)
+        self.mask_generator = SamAutomaticMaskGenerator(self.sam)
 
         # xmem
         self.xmem = BaseTracker(
@@ -55,10 +46,7 @@ class GroundedTrackNode(ConnectionBasedTransport):
         self.pub_segmentation_img = self.advertise(
             "~segmentation_mask", Image, queue_size=1
         )
-        self.label_mode = True # True: Positive, False: Negative
 
-        self.points = []
-        self.labels = []
         self.multimask = False
 
         self.logits = []
@@ -66,7 +54,6 @@ class GroundedTrackNode(ConnectionBasedTransport):
         self.num_mask = 0
 
         # for place holder init
-        self.embedded_image = None
         self.image = None
         self.painted_image = None
         self.bbox = None
@@ -88,37 +75,6 @@ class GroundedTrackNode(ConnectionBasedTransport):
         self.sub_image.unregister()
         self.xmem.clear_memory()
 
-    def process_prompt(
-        self,
-        points=None,
-        bbox=None,
-        labels=None,
-        mask_input=None,
-        multimask:bool=True,
-    ):
-        """
-        it is used in first frame
-        return: mask, logit, painted image(mask+point)
-        """
-        bbox = torch.Tensor(bbox[0]).to(self.device)
-
-        transformed_boxes = self.predictor.transform.apply_boxes_torch(
-            bbox, self.image.shape[:2])
-
-        
-        prompts = dict(
-            point_coords= None,
-            point_labels= None,
-            boxes= transformed_boxes,
-            # mask_input= mask_input, # TODO
-            multimask_output= multimask,
-        )
-        masks, scores, logits = self.predictor.predict_torch(
-            **prompts) # [N, H, W], B : number of prompts, N : number of masks recommended
-
-        return masks, logits
-
-
     def compose_mask(self, masks):
         """
         input: list of numpy ndarray of 0 and 1, [H, W]
@@ -132,9 +88,9 @@ class GroundedTrackNode(ConnectionBasedTransport):
                 i + 1,
             )
             # TODO : checking overlapping mask
-            assert len(np.unique(template_mask)) == (i + 2)
+            # assert len(np.unique(template_mask)) == (i + 2)
 
-        assert len(np.unique(template_mask)) == (len(self.masks) + 1)
+        # assert len(np.unique(template_mask)) == (len(self.masks) + 1)
         return template_mask
 
     def decompose_mask(self, mask):
@@ -146,8 +102,6 @@ class GroundedTrackNode(ConnectionBasedTransport):
         for i in range(len(self.masks)):
             masks.append(mask == (i + 1))
         return masks
-
-
 
     def callback(self, img_msg):
         self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
@@ -164,21 +118,8 @@ class GroundedTrackNode(ConnectionBasedTransport):
             for i, mask in enumerate(masks):
                 self.painted_image = mask_painter(self.painted_image, mask, i)
         else:  # init
-            bboxes = get_grounded_bbox(
-                model = self.grounding_dino,
-                image=self.image,
-                text_prompt=self.text_prompt,
-                box_threshold=self.box_threshold,
-                text_threshold=self.text_threshold,
-            )
-            self.predictor.set_image(self.image)
-            self.masks, self.logits = self.process_prompt(
-                None,
-                bboxes,
-                None,
-                None,
-                False)
-            self.masks = [mask.squeeze(0).cpu().numpy().astype(np.uint8) for mask in self.masks]
+            masks = self.mask_generator.generate(self.image) # dict of masks
+            self.masks = [mask["segmentation"].astype(np.uint8) for mask in masks]
             self.template_mask = self.compose_mask(self.masks)
             self.mask, self.logit = self.xmem.track(
                 frame=self.image, first_frame_annotation=self.template_mask
@@ -191,9 +132,7 @@ class GroundedTrackNode(ConnectionBasedTransport):
             self.pub_vis_img.publish(vis_img_msg)
 
 
-
-
 if __name__ == "__main__":
-    rospy.init_node("grounded_track_node")
-    node = GroundedTrackNode()
+    rospy.init_node("track_all_node")
+    node = TrackAllNode()
     rospy.spin()
