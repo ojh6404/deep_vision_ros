@@ -3,13 +3,13 @@
   <arg name="model_type" default="vit_b" />
   <arg name="device" default="cuda:0" />
   <arg name="text_prompt"/>
+  <arg name="num_slots" default="10"/>
   
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="processed_image" default="/$(arg ns)/processed_image"/>
   <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
   <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
-  
 
   <group ns="$(arg ns)">
     <!-- process image and repub -->
@@ -26,6 +26,7 @@
     <include file="$(find tracking_ros)/launch/track_all_node.launch" >
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
+      <arg name="num_slots" value="$(arg num_slots)" />
       <arg name="processed_image" value="$(arg processed_image)"/>
       <arg name="segmentation_image" value="$(arg segmentation_image)" />
       <arg name="segmentation_mask" value="$(arg segmentation_mask)" />

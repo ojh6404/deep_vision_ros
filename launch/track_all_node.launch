@@ -2,6 +2,7 @@
     <arg name="ns" default="tracking_ros" />
     <arg name="model_type" default="vit_h" />
     <arg name="device" default="cuda:0" />
+    <arg name="num_slots" default="10" />
 
     <arg name="processed_image" default="/$(arg ns)/processed_image"/>
     <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
@@ -18,6 +19,7 @@
             model_type: $(arg model_type)
             model_dir: $(find tracking_ros)/checkpoints/
             tracker_config: $(find tracking_ros)/config/tracker_config.yaml
+            num_slots: $(arg num_slots)
         </rosparam>
     </node>
 </launch>

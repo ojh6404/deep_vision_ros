@@ -1,22 +1,16 @@
 #!/usr/bin/env python
 import numpy as np
-import torch
-
 import rospy
 from cv_bridge import CvBridge
-import cv2
-import time
-
 from sensor_msgs.msg import Image
 from jsk_topic_tools import ConnectionBasedTransport
 
-
-from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 from tracking_ros.tracker.base_tracker import BaseTracker
 from tracking_ros.utils.util import (
     download_checkpoint,
 )
-from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
+from tracking_ros.utils.painter import mask_painter
 
 class TrackAllNode(ConnectionBasedTransport):
     def __init__(self):
@@ -34,6 +28,7 @@ class TrackAllNode(ConnectionBasedTransport):
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
         self.mask_generator = SamAutomaticMaskGenerator(self.sam)
+        self.num_slots = rospy.get_param("~num_slots", None)
 
         # xmem
         self.xmem = BaseTracker(
@@ -41,24 +36,17 @@ class TrackAllNode(ConnectionBasedTransport):
         )
 
         self.bridge = CvBridge()
-
         self.pub_vis_img = self.advertise("~output_image", Image, queue_size=1)
         self.pub_segmentation_img = self.advertise(
             "~segmentation_mask", Image, queue_size=1
         )
 
-        self.multimask = False
-
-        self.logits = []
         self.masks = []
-        self.num_mask = 0
 
         # for place holder init
         self.image = None
         self.painted_image = None
-        self.bbox = None
         self.mask = None
-        self.logit = None
         self.template_mask = None
 
 
@@ -119,7 +107,12 @@ class TrackAllNode(ConnectionBasedTransport):
                 self.painted_image = mask_painter(self.painted_image, mask, i)
         else:  # init
             masks = self.mask_generator.generate(self.image) # dict of masks
-            self.masks = [mask["segmentation"].astype(np.uint8) for mask in masks]
+            if self.num_slots is not None:
+                # already sorted by predicted iou score
+                self.masks = [mask["segmentation"].astype(np.uint8) for mask in masks][:self.num_slots]
+            else:
+                self.masks = [mask["segmentation"].astype(np.uint8) for mask in masks] # all masks
+
             self.template_mask = self.compose_mask(self.masks)
             self.mask, self.logit = self.xmem.track(
                 frame=self.image, first_frame_annotation=self.template_mask
