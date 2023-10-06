@@ -1,14 +1,14 @@
 
 <launch>
+    <arg name="ns" default="tracking_ros" />
     <arg name="model_type" default="vit_h" />
     <arg name="device" default="cuda:0" />
 
-    <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
-    <arg name="input_point" default="processed_image/screenpoint" />
-    <arg name="input_bbox" default="processed_image/screenrectangle" />
-    <arg name="processed_image" default="processed_image"/>
-    <arg name="segmentation_image" default="segmentation_image" />
-    <arg name="segmentation_mask" default="segmentation_mask" />
+    <arg name="input_point" default="/$(arg ns)/processed_image/screenpoint" />
+    <arg name="input_bbox" default="/$(arg ns)/processed_image/screenrectangle" />
+    <arg name="processed_image" default="/$(arg ns)/processed_image"/>
+    <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
+    <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
 
     <node name="tracking_node"
             pkg="tracking_ros" type="track_node.py"

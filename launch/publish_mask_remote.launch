@@ -23,18 +23,17 @@
       <remap from="out" to="$(arg processed_image)"/>
     </node>
 
-    <!-- tracking node -->
-    <include file="$(find tracking_ros)/launch/track_node.launch" >
-      <arg name="ns" value="$(arg ns)" />
-      <arg name="model_type" value="$(arg model_type)" />
-      <arg name="device" value="$(arg device)" />
-      <arg name="input_image" value="$(arg input_image)"/>
-      <arg name="input_point" value="$(arg input_point)" />
-      <arg name="input_bbox" value="$(arg input_bbox)" />
-      <arg name="processed_image" value="$(arg processed_image)"/>
-      <arg name="segmentation_image" value="$(arg segmentation_image)" />
-      <arg name="segmentation_mask" value="$(arg segmentation_mask)" />
-    </include>
+    <!-- <!-\- tracking node -\-> -->
+    <!-- <include file="$(find tracking_ros)/launch/track_node.launch" > -->
+    <!--   <arg name="model_type" value="$(arg model_type)" /> -->
+    <!--   <arg name="device" value="$(arg device)" /> -->
+    <!--   <arg name="input_image" value="$(arg input_image)"/> -->
+    <!--   <arg name="input_point" value="$(arg input_point)" /> -->
+    <!--   <arg name="input_bbox" value="$(arg input_bbox)" /> -->
+    <!--   <arg name="processed_image" value="$(arg processed_image)"/> -->
+    <!--   <arg name="segmentation_image" value="$(arg segmentation_image)" /> -->
+    <!--   <arg name="segmentation_mask" value="$(arg segmentation_mask)" /> -->
+    <!-- </include> -->
 
 
     <!-- interactive prompter -->
