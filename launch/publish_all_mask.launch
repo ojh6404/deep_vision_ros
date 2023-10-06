@@ -3,7 +3,7 @@
   <arg name="model_type" default="vit_b" />
   <arg name="device" default="cuda:0" />
   <arg name="text_prompt"/>
-  <arg name="num_slots" default="10"/>
+  <arg name="num_slots" default="-1"/>
   
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
