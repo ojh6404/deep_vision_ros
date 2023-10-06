@@ -28,7 +28,7 @@ class TrackAllNode(ConnectionBasedTransport):
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
         self.mask_generator = SamAutomaticMaskGenerator(self.sam)
-        self.num_slots = rospy.get_param("~num_slots", None)
+        self.num_slots = rospy.get_param("~num_slots", -1)
 
         # xmem
         self.xmem = BaseTracker(
@@ -107,7 +107,7 @@ class TrackAllNode(ConnectionBasedTransport):
                 self.painted_image = mask_painter(self.painted_image, mask, i)
         else:  # init
             masks = self.mask_generator.generate(self.image) # dict of masks
-            if self.num_slots is not None:
+            if self.num_slots > 0:
                 # already sorted by predicted iou score
                 self.masks = [mask["segmentation"].astype(np.uint8) for mask in masks][:self.num_slots]
             else:
