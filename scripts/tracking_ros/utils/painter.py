@@ -136,3 +136,14 @@ def bbox_drawer(image, bbox, color=None):
         color = [0, 255, 0]
     image = cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]) ), color, 2)
     return image.astype(np.uint8)
+
+def bbox_drawer_with_text(image, bbox, text, color_index):
+    # image: [H, W, C]
+    # bbox: [x1, y1, x2, y2]
+    # text: string
+    # output: [H, W, C]
+    color = color_list[color_index+1].astype(np.int32).tolist()
+    image = bbox_drawer(image, bbox, color=color)
+    image = cv2.putText(image, text, (bbox[0], bbox[1] - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1, cv2.LINE_AA)
+    # image = cv2.putText(image, text, (bbox[0], bbox[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+    return image
