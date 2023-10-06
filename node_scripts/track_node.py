@@ -240,7 +240,6 @@ class TrackNode(ConnectionBasedTransport):
         it is used in first frame
         return: mask, logit, painted image(mask+point)
         """
-        assert len(points) == len(labels)
         prompts = dict(
             point_coords= points,
             point_labels= labels,
