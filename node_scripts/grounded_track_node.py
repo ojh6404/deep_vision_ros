@@ -100,7 +100,7 @@ class GroundedTrackNode(ConnectionBasedTransport):
         it is used in first frame
         return: mask, logit, painted image(mask+point)
         """
-        bbox = torch.Tensor(bbox[0]).to(self.device)
+        bbox = torch.Tensor(bbox).to(self.device)
 
         transformed_boxes = self.predictor.transform.apply_boxes_torch(
             bbox, self.image.shape[:2])
@@ -164,13 +164,15 @@ class GroundedTrackNode(ConnectionBasedTransport):
             for i, mask in enumerate(masks):
                 self.painted_image = mask_painter(self.painted_image, mask, i)
         else:  # init
-            bboxes = get_grounded_bbox(
+            bboxes, phrases = get_grounded_bbox(
                 model = self.grounding_dino,
                 image=self.image,
                 text_prompt=self.text_prompt,
                 box_threshold=self.box_threshold,
                 text_threshold=self.text_threshold,
             )
+            for i, bbox in enumerate(bboxes):
+                rospy.loginfo("bbox: {}, phrase: {}".format(bbox, phrases[i]))
             self.predictor.set_image(self.image)
             self.masks, self.logits = self.process_prompt(
                 None,

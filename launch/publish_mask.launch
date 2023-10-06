@@ -28,7 +28,6 @@
       <arg name="ns" value="$(arg ns)" />
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
-      <arg name="input_image" value="$(arg input_image)"/>
       <arg name="input_point" value="$(arg input_point)" />
       <arg name="input_bbox" value="$(arg input_bbox)" />
       <arg name="processed_image" value="$(arg processed_image)"/>
