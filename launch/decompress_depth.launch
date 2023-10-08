@@ -1,0 +1,21 @@
+<launch>
+
+  <arg name="input_image"/>
+  <arg name="input_depth"/>
+
+  <node name="image_decompresser"
+       pkg="image_transport" type="republish"
+       args="compressed raw" respawn="true">
+    <remap from="in" to="/$(arg input_image)"/>
+    <remap from="out" to="decompressed_image"/>
+  </node>
+
+  <!-- needs image_transport_plugins/#64 -->
+  <node name="depth_decompresser"
+       pkg="image_transport" type="republish"
+       args="compressedDepth raw" respawn="true">
+    <remap from="in" to="/$(arg input_depth)"/>
+    <remap from="out" to="decompressed_depth"/>
+  </node>
+
+</launch>

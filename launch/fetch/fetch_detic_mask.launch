@@ -1,12 +1,10 @@
 <launch>
   <arg name="ns" default="tracking_ros" />
-  <arg name="model_type" default="vit_b" />
   <arg name="device" default="cuda:0" />
   
-  <arg name="compressed" default="false"/>
+  <arg name="compressed" default="true"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
-  <arg name="input_point" default="/$(arg ns)/processed_image/screenpoint" />
-  <arg name="input_bbox" default="/$(arg ns)/processed_image/screenrectangle" />
+  <arg name="input_mask" default="/docker/detic_segmentor/segmentation_info"/>
   <arg name="processed_image" default="/$(arg ns)/processed_image"/>
   <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
   <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
@@ -23,24 +21,21 @@
       <remap from="out" to="$(arg processed_image)"/>
     </node>
 
-    <!-- interactive prompter -->
-    <node name="image_view2" pkg="image_view2" type="image_view2" output="screen">
-      <remap from="image" to="$(arg processed_image)" />
-      <param name="use_window" value="false" />
-    </node>
-    <node pkg="jsk_rqt_plugins" type="rqt_image_view2" name="prompter"
-          output="screen">
-      <remap from="event" to="image_view2/event" />
-      <remap from="image_marked" to="image_marked" />
-    </node>
-    <node name="prompter_button"
-          pkg="jsk_rqt_plugins" type="rqt_tabbed_buttons" output="screen" clear_params="true">
-      <rosparam command="load" file="$(find tracking_ros)/resource/remote_tabbed_layout.yaml" />
-    </node>
+    <!-- tracking node -->
+    <include file="$(find tracking_ros)/launch/detic_node.launch" >
+      <arg name="ns" value="$(arg ns)" />
+      <arg name="model_type" value="$(arg model_type)" />
+      <arg name="device" value="$(arg device)" />
+      <arg name="input_mask" value="$(arg input_mask)" />
+      <arg name="processed_image" value="$(arg processed_image)"/>
+      <arg name="segmentation_image" value="$(arg segmentation_image)" />
+      <arg name="segmentation_mask" value="$(arg segmentation_mask)" />
+    </include>
+
 
     <!-- visualize segmentation -->
     <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">
-    <remap from="image" to="$(arg segmentation_image)" />
+      <remap from="image" to="$(arg segmentation_image)" />
     </node>
 
   </group>
