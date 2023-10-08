@@ -1,6 +1,6 @@
 <launch>
   <arg name="ns" default="tracking_ros" />
-  <arg name="model_type" default="vit_b" />
+  <arg name="model_type" default="vit_h" />
   <arg name="device" default="cuda:0" />
   <arg name="text_prompt"/>
   
