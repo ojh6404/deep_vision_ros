@@ -1,0 +1,69 @@
+<launch>
+  <arg name="namespace" default="tracking_ros" />
+  <arg name="standalone" default="false"/> <!-- debug nodes by setting then standalone -->
+  <arg name="MANAGER" value="detection_manager" unless="$(arg standalone)"/>
+  <arg name="MANAGER" value="" if="$(arg standalone)"/>
+  <arg name="LOAD_STATEMENT" value="load" unless="$(arg standalone)"/>
+  <arg name="LOAD_STATEMENT" value="standalone" if="$(arg standalone)"/>
+
+  <arg name="input_image" default="/head_camera/rgb/image_rect_color"/>
+  <arg name="input_depth" default="/head_camera/depth_registered/image_rect"/>
+  <arg name="input_camera_info" default="/head_camera/rgb/camera_info"/>
+  <arg name="target_frame_id" default="base_link" />
+
+  <group ns='$(arg namespace)'>
+    <node name="$(arg MANAGER)" pkg="nodelet" type="nodelet" args="manager"/>
+
+    <include file="$(find tracking_ros)/launch/decompress_point_cloud.launch" >
+      <arg name="launch_manager" value="false"/> <!-- already launched -->
+      <arg name="manager" value="$(arg MANAGER)"/>
+      <arg name="namespace" value="$(arg namespace)"/>
+      <arg name="RGB_CAMERA_INFO" value="$(arg input_camera_info)" />
+      <arg name="RGB_IMAGE" value="$(arg input_image)" />
+      <arg name="DEPTH_IMAGE" value="$(arg input_depth)" />
+    </include>
+
+    <node name="label_image_to_indices"
+          pkg="nodelet" type="nodelet"
+          args="$(arg LOAD_STATEMENT) jsk_pcl_utils/LabelToClusterPointIndices $(arg MANAGER)">
+      <remap from="~input" to="segmentation_mask"/>
+      <remap from="~output" to="segmentor/indices"/>
+    </node>
+
+    <!-- cluster_filter: 1 is desirable, but only stable with jsk_recognition/#2739 -->
+    <node name="euclidean_clustering"
+          pkg="nodelet" type="nodelet"
+          args="$(arg LOAD_STATEMENT) jsk_pcl/EuclideanClustering $(arg MANAGER)"
+          clear_params="true">
+      <remap from="~input" to="depth_registered/points"/>
+      <remap from="~input/cluster_indices" to="segmentor/indices"/>
+      <rosparam>
+        multi: true
+        tolerance: 0.03
+        min_size: 10
+        downsample_enable: true
+        approximate_sync: true
+        queue_size: 100
+      </rosparam>
+    </node>
+
+    <node name="cluster_point_indices_decomposer"
+          pkg="nodelet" type="nodelet"
+          args="$(arg LOAD_STATEMENT) jsk_pcl/ClusterPointIndicesDecomposer $(arg MANAGER)"
+          clear_params="true">
+      <remap from="~input" to="depth_registered/points"/>
+      <remap from="~target" to="euclidean_clustering/output"/>
+      <remap from="~boxes" to="segmentor/output/boxes"/>
+      <remap from="~centroid_pose_array" to="segmentor/output/centroid"/>
+      <rosparam subst_value="true">
+        align_boxes: true
+        align_boxes_with_plane: false
+        force_to_flip_z_axis: false
+        use_pca: false
+        target_frame_id: $(arg target_frame_id)
+        approximate_sync: true
+        queue_size: 100
+      </rosparam>
+    </node>
+  </group>
+</launch>

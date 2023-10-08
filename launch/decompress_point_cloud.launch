@@ -4,14 +4,14 @@
   <arg name="manager" default="pr2_decompress_nodelet_manager" />
   <arg name="launch_manager" default="true" />
   <arg name="machine" default="localhost" />
+  <arg name="namespace" default="kinect_head_remote" />
 
   <arg name="RGB_CAMERA_INFO" default="/kinect_head/rgb/camera_info" />
   <arg name="RGB_IMAGE" default="/kinect_head/rgb/image_rect_color" />
-  <arg name="RGB_REMOTE_IMAGE" default="/kinect_head_remote/rgb/image_rect_color" />
-  <arg name="DEPTH_CAMERA_INFO" default="/kinect_head/depth_registered/camera_info" />
+  <arg name="RGB_REMOTE_IMAGE" default="/$(arg namespace)/rgb/image_rect_color" />
   <arg name="DEPTH_IMAGE" default="/kinect_head/depth_registered/image_rect"  />
-  <arg name="DEPTH_REMOTE_IMAGE" default="/kinect_head_remote/depth_registered/image_rect" />
-  <arg name="CLOUD" default="/kinect_head_remote/depth_registered/points" />
+  <arg name="DEPTH_REMOTE_IMAGE" default="/$(arg namespace)/depth_registered/image_rect" />
+  <arg name="CLOUD" default="/$(arg namespace)/depth_registered/points" />
 
   <node name="$(arg manager)" pkg="nodelet" type="nodelet" args="manager"
         machine="$(arg machine)" if="$(arg launch_manager)"
