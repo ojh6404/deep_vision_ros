@@ -7,9 +7,7 @@ from sensor_msgs.msg import Image
 from jsk_topic_tools import ConnectionBasedTransport
 
 from tracking_ros.tracker.base_tracker import BaseTracker
-from tracking_ros.utils.util import (
-    download_checkpoint,
-)
+from tracking_ros.utils.util import download_checkpoint
 from tracking_ros.utils.painter import mask_painter
 
 class TrackNode(ConnectionBasedTransport):
