@@ -9,7 +9,6 @@ from geometry_msgs.msg import PointStamped, PolygonStamped
 from std_srvs.srv import Empty, EmptyResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
-from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
 from tracking_ros.utils.util import download_checkpoint
 from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
 
@@ -18,13 +17,21 @@ class SAMNode(ConnectionBasedTransport):
         super(SAMNode, self).__init__()
 
         model_dir = rospy.get_param("~model_dir")
-        model_type = rospy.get_param("~model_type", "vit_b")
+        model_type = rospy.get_param("~model_type", "vit_h")
+        self.is_hq = "hq" in model_type
+        model_type = model_type.replace("_hq", "")
 
-        sam_checkpoint = download_checkpoint("sam_"+ model_type, model_dir)
+        model_name = "sam_hq_" + model_type if self.is_hq else "sam_" + model_type
+        sam_checkpoint = download_checkpoint(model_name, model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
         self.prompt_mode = rospy.get_param("~mode", "interactive") == "interactive"
 
         # sam
+        if self.is_hq:
+            from segment_anything_hq import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
+            sam_checkpoint = "/home/oh/ros/pr2_ws/src/perception/tracking_ros/checkpoints/sam_hq_vit_h.pth"
+        else:
+            from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
         if self.prompt_mode:
