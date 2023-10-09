@@ -35,10 +35,13 @@ class TrackNode(ConnectionBasedTransport):
         self.mask = None
         if self.from_detic: # TODO: make this more general
             from detic_ros.msg import SegmentationInfo
+            import rosnode
             detic_seg_msg = rospy.wait_for_message("/docker/detic_segmentor/segmentation_info", SegmentationInfo)
             self.classes = detic_seg_msg.detected_classes
             rospy.loginfo("classes: {}".format(self.classes))
             self.template_mask = self.bridge.imgmsg_to_cv2(detic_seg_msg.segmentation, desired_encoding="32SC1")
+            # kill detic node for memory
+            rosnode.kill_nodes(["/docker/detic_segmentor"])
         else:
             input_seg_msg = rospy.wait_for_message("~input_segmentation", Image)
             self.template_mask = self.bridge.imgmsg_to_cv2(input_seg_msg, desired_encoding="32SC1")
