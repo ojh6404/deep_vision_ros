@@ -1,16 +1,18 @@
 <launch>
   <arg name="ns" default="tracking_ros" />
-  <arg name="model_type" default="vit_b" />
+  <arg name="model_type" default="vit_h" />
   <arg name="device" default="cuda:0" />
-  
+
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="input_point" default="/$(arg ns)/processed_image/screenpoint" />
   <arg name="input_bbox" default="/$(arg ns)/processed_image/screenrectangle" />
   <arg name="processed_image" default="/$(arg ns)/processed_image"/>
   <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
-  <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
-  
+  <arg name="prompt_image" default="/$(arg ns)/prompt_image" />
+  <arg name="input_segmentation" default="/$(arg ns)/input_segmentation" />
+  <arg name="output_segmentation" default="/$(arg ns)/segmentation" />
+
 
   <group ns="$(arg ns)">
     <!-- process image and repub -->
@@ -23,18 +25,28 @@
       <remap from="out" to="$(arg processed_image)"/>
     </node>
 
-    <!-- tracking node -->
-    <include file="$(find tracking_ros)/launch/track_node.launch" >
+    <!-- sam node -->
+    <include file="$(find tracking_ros)/launch/sam_node.launch" >
       <arg name="ns" value="$(arg ns)" />
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
       <arg name="input_point" value="$(arg input_point)" />
       <arg name="input_bbox" value="$(arg input_bbox)" />
-      <arg name="processed_image" value="$(arg processed_image)"/>
-      <arg name="segmentation_image" value="$(arg segmentation_image)" />
-      <arg name="segmentation_mask" value="$(arg segmentation_mask)" />
+      <arg name="input_image" value="$(arg processed_image)"/>
+      <arg name="prompt_image" value="$(arg prompt_image)"/>
+      <arg name="input_segmentation" value="$(arg input_segmentation)" />
     </include>
 
+    <!-- tracking node -->
+    <include file="$(find tracking_ros)/launch/track_node.launch" >
+      <arg name="ns" value="$(arg ns)" />
+      <arg name="model_type" value="$(arg model_type)" />
+      <arg name="device" value="$(arg device)" />
+      <arg name="input_image" value="$(arg processed_image)"/>
+      <arg name="input_segmentation" value="$(arg input_segmentation)" />
+      <arg name="output_image" value="$(arg segmentation_image)"/>
+      <arg name="output_segmentation" value="$(arg output_segmentation)" />
+    </include>
 
     <!-- interactive prompter -->
     <node name="image_view2" pkg="image_view2" type="image_view2" output="screen">
@@ -53,7 +65,7 @@
 
     <!-- visualize segmentation -->
     <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">
-    <remap from="image" to="$(arg segmentation_image)" />
+    <remap from="image" to="$(arg prompt_image)" />
     </node>
 
   </group>
