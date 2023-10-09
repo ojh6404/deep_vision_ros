@@ -10,8 +10,8 @@
     <arg name="output_segmentation" default="/$(arg ns)/segmentation" />
 
     <node name="track_node"
-            pkg="tracking_ros" type="track_node.py"
-            output="screen" >
+          pkg="tracking_ros" type="track_node.py"
+          output="screen" >
         <remap from="~input_image" to="$(arg input_image)" />
         <remap from="~input_segmentation" to="$(arg input_segmentation)" />
         <remap from="~output_image" to="$(arg segmentation_image)" />

@@ -10,7 +10,7 @@ from std_srvs.srv import Empty, EmptyResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
 
-from segment_anything import sam_model_registry, SamPredictor
+from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
 from tracking_ros.utils.util import (
     download_checkpoint,
 )
@@ -25,34 +25,38 @@ class SAMNode(ConnectionBasedTransport):
 
         sam_checkpoint = download_checkpoint("sam_"+ model_type, model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
+        self.prompt_mode = rospy.get_param("~prompt_mode", True)
 
         # sam
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
-        self.predictor = SamPredictor(self.sam)
+        if self.prompt_mode:
+            self.predictor = SamPredictor(self.sam)
+            self.toggle_prompt_label_service = rospy.Service(
+                "/tracking_ros/toggle_label", Empty, self.toggle_prompt_label_callback
+            )
+            self.clear_points_service = rospy.Service(
+                "/tracking_ros/clear_points", Empty, self.clear_points_callback
+            )
+            self.clear_masks_service = rospy.Service(
+                "/tracking_ros/clear_masks", Empty, self.clear_masks_callback
+            )
+            self.add_mask_service = rospy.Service(
+                "/tracking_ros/add_mask", Empty, self.add_mask_callback
+            )
+            self.reset_embed_service = rospy.Service(
+                "/tracking_ros/reset_embed", Empty, self.reset_embed_callback
+            )
 
-        self.toggle_prompt_label_service = rospy.Service(
-            "/tracking_ros/toggle_label", Empty, self.toggle_prompt_label_callback
-        )
-        self.clear_points_service = rospy.Service(
-            "/tracking_ros/clear_points", Empty, self.clear_points_callback
-        )
-        self.clear_masks_service = rospy.Service(
-            "/tracking_ros/clear_masks", Empty, self.clear_masks_callback
-        )
-        self.add_mask_service = rospy.Service(
-            "/tracking_ros/add_mask", Empty, self.add_mask_callback
-        )
-        self.reset_embed_service = rospy.Service(
-            "/tracking_ros/reset_embed", Empty, self.reset_embed_callback
-        )
-
-        self.track_trigger_service = rospy.Service(
-            "/tracking_ros/track_trigger", Empty, self.track_trigger_callback
-        )
+            self.track_trigger_service = rospy.Service(
+                "/tracking_ros/track_trigger", Empty, self.track_trigger_callback
+            )
+            self.pub_vis_img = self.advertise("~output_image", Image, queue_size=1)
+        else:
+            self.predictor = SamAutomaticMaskGenerator(self.sam)
+            self.num_slots = rospy.get_param("~num_slots", -1)
 
         self.bridge = CvBridge()
-        self.pub_vis_img = self.advertise("~output_image", Image, queue_size=1)
         self.pub_segmentation_img = self.advertise(
             "~segmentation", Image, queue_size=1
         )
@@ -82,21 +86,23 @@ class SAMNode(ConnectionBasedTransport):
             queue_size=1,
             buff_size=2**24,
         )
-        self.sub_point = rospy.Subscriber(
-            "~input_point",
-            PointStamped,
-            self.point_callback,
-            queue_size=1,
-            buff_size=2**24,
-        )
-        self.sub_bbox = rospy.Subscriber(
-            "~input_bbox",
-            PolygonStamped,
-            self.bbox_callback,
-            queue_size=1,
-            buff_size=2**24,
-        )
-        self.subs = [self.sub_image, self.sub_point, self.sub_bbox]
+        self.subs = [self.sub_image]
+        if self.prompt_mode:
+            self.sub_point = rospy.Subscriber(
+                "~input_point",
+                PointStamped,
+                self.point_callback,
+                queue_size=1,
+                buff_size=2**24,
+            )
+            self.sub_bbox = rospy.Subscriber(
+                "~input_bbox",
+                PolygonStamped,
+                self.bbox_callback,
+                queue_size=1,
+                buff_size=2**24,
+            )
+            self.subs += [self.sub_point, self.sub_bbox]
 
     def unsubscribe(self):
         for sub in self.subs:
@@ -261,46 +267,58 @@ class SAMNode(ConnectionBasedTransport):
                 i + 1,
             )
             # TODO : checking overlapping mask
-            assert len(np.unique(template_mask)) == (i + 2)
+            # assert len(np.unique(template_mask)) == (i + 2)
 
-        assert len(np.unique(template_mask)) == (len(self.masks) + 1)
+        # assert len(np.unique(template_mask)) == (len(self.masks) + 1)
         return template_mask
+
+    def kill_nodes(self):
+        # kill node
+        nodes_list = rosnode.get_node_names()
+        for node in nodes_list:
+            if "image_view" in node or "prompter" in node:
+                rospy.loginfo("kill {}".format(node))
+                rosnode.kill_nodes([node])
+        rospy.signal_shutdown("Tracking done")
+
 
     def callback(self, img_msg):
         self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
         if self.template_mask is not None:  # track start
-
             # free memory
-            del self.predictor
-            del self.sam
+            if self.predictor:
+                del self.predictor
+                del self.sam
 
-            seg_mask = self.bridge.cv2_to_imgmsg(
+            seg_msg = self.bridge.cv2_to_imgmsg(
                 self.template_mask.astype(np.int32), encoding="32SC1"
             )
-            self.pub_segmentation_img.publish(seg_mask)
+            self.pub_segmentation_img.publish(seg_msg)
 
-            # kill node
-            nodes_list = rosnode.get_node_names()
-            for node in nodes_list:
-                if "image_view" in node or "prompter" in node:
-                    rospy.loginfo("kill {}".format(node))
-                    rosnode.kill_nodes([node])
-            rospy.signal_shutdown("Tracking done")
+            self.kill_nodes()
         else:  # init
-            self.painted_image = self.image.copy()
-            for i, mask in enumerate(self.masks + [self.mask]):
-                self.painted_image = mask_painter(self.painted_image, mask, i)
-            self.painted_image = point_drawer(
-                self.painted_image,
-                self.points,
-                self.labels
-            )
-            self.painted_image = bbox_drawer(self.painted_image, self.bbox)
+            if self.prompt_mode:
+                self.painted_image = self.image.copy()
+                for i, mask in enumerate(self.masks + [self.mask]):
+                    self.painted_image = mask_painter(self.painted_image, mask, i)
+                self.painted_image = point_drawer(
+                    self.painted_image,
+                    self.points,
+                    self.labels
+                )
+                self.painted_image = bbox_drawer(self.painted_image, self.bbox)
 
-        vis_img_msg = self.bridge.cv2_to_imgmsg(self.painted_image, encoding="rgb8")
-        vis_img_msg.header.stamp = rospy.Time.now()
-        vis_img_msg.header.frame_id = img_msg.header.frame_id
-        self.pub_vis_img.publish(vis_img_msg)
+                vis_img_msg = self.bridge.cv2_to_imgmsg(self.painted_image, encoding="rgb8")
+                vis_img_msg.header.stamp = rospy.Time.now()
+                vis_img_msg.header.frame_id = img_msg.header.frame_id
+                self.pub_vis_img.publish(vis_img_msg)
+            else:
+                masks = self.predictor.generate(self.image) # dict of masks
+                self.masks = [mask["segmentation"] for mask in masks]
+                if self.num_slots > 0:
+                    self.masks = [mask["segmentation"] for mask in masks][:self.num_slots]
+                self.template_mask = self.compose_mask(self.masks)
+
 
 
 
