@@ -2,6 +2,8 @@
     <arg name="ns" default="tracking_ros" />
     <arg name="model_type" default="vit_h" />
     <arg name="device" default="cuda:0" />
+    <arg name="prompt_mode" default="true" />
+    <arg name="num_slots" default="-1" />
 
     <arg name="input_point" default="/$(arg ns)/processed_image/screenpoint" />
     <arg name="input_bbox" default="/$(arg ns)/processed_image/screenrectangle" />
@@ -21,6 +23,8 @@
             device: $(arg device)
             model_type: $(arg model_type)
             model_dir: $(find tracking_ros)/checkpoints/
+            prompt_mode: $(arg prompt_mode)
+            num_slots: $(arg num_slots)
         </rosparam>
     </node>
 </launch>
