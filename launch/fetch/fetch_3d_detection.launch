@@ -9,6 +9,7 @@
   <arg name="input_image" default="/head_camera/rgb/image_rect_color"/>
   <arg name="input_depth" default="/head_camera/depth_registered/image_rect"/>
   <arg name="input_camera_info" default="/head_camera/rgb/camera_info"/>
+  <arg name="input_segmentation" default="/$(arg ns)/segmentation"/>
   <arg name="target_frame_id" default="base_link" />
 
   <group ns='$(arg namespace)'>
@@ -26,7 +27,7 @@
     <node name="label_image_to_indices"
           pkg="nodelet" type="nodelet"
           args="$(arg LOAD_STATEMENT) jsk_pcl_utils/LabelToClusterPointIndices $(arg MANAGER)">
-      <remap from="~input" to="segmentation_mask"/>
+      <remap from="~input" to="$(arg input_segmentation)"/>
       <remap from="~output" to="segmentor/indices"/>
     </node>
 
