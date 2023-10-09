@@ -3,18 +3,17 @@
     <arg name="model_type" default="vit_h" />
     <arg name="device" default="cuda:0" />
     <arg name="text_prompt" />
+    <arg name="box_threshold" default="0.35" />
+    <arg name="text_threshold" default="0.25" />
 
-    <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
-    <arg name="processed_image" default="/$(arg ns)/processed_image"/>
-    <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
-    <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
+    <arg name="input_image" default="/$(arg ns)/processed_image"/>
+    <arg name="input_segmentation" default="/$(arg ns)/input_segmentation" />
 
-    <node name="tracking_node"
-            pkg="tracking_ros" type="grounded_track_node.py"
+    <node name="grounding_dino_node"
+            pkg="tracking_ros" type="grounding_dino_node.py"
             output="screen" >
-        <remap from="~input_image" to="$(arg processed_image)" />
-        <remap from="~output_image" to="$(arg segmentation_image)" />
-        <remap from="~segmentation_mask" to="$(arg segmentation_mask)" />
+        <remap from="~input_image" to="$(arg input_image)" />
+        <remap from="~segmentation" to="$(arg input_segmentation)" />
         <rosparam subst_value="true" >
             device: $(arg device)
             model_type: $(arg model_type)
@@ -22,6 +21,8 @@
             tracker_config: $(find tracking_ros)/config/tracker_config.yaml
             dino_config: $(find tracking_ros)/config/GroundingDINO_SwinT_OGC.py
             text_prompt: $(arg text_prompt)
+            box_threshold: $(arg box_threshold)
+            text_threshold: $(arg text_threshold)
         </rosparam>
     </node>
 </launch>

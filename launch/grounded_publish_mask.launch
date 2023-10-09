@@ -3,12 +3,15 @@
   <arg name="model_type" default="vit_h" />
   <arg name="device" default="cuda:0" />
   <arg name="text_prompt"/>
+  <arg name="box_threshold" default="0.35" />
+  <arg name="text_threshold" default="0.25" />
   
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="processed_image" default="/$(arg ns)/processed_image"/>
   <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
-  <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
+  <arg name="input_segmentation" default="/$(arg ns)/input_segmentation" />
+  <arg name="output_segmentation" default="/$(arg ns)/segmentation" />
   
 
   <group ns="$(arg ns)">
@@ -22,15 +25,26 @@
       <remap from="out" to="$(arg processed_image)"/>
     </node>
 
-    <!-- tracking node -->
-    <include file="$(find tracking_ros)/launch/grounded_track_node.launch" >
+    <!-- grounded_detection node -->
+    <include file="$(find tracking_ros)/launch/grounding_dino_node.launch" >
+      <arg name="ns" value="$(arg ns)" />
       <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
       <arg name="text_prompt" value="$(arg text_prompt)" />
-      <arg name="processed_image" value="$(arg processed_image)"/>
-      <arg name="segmentation_image" value="$(arg segmentation_image)" />
-      <arg name="segmentation_mask" value="$(arg segmentation_mask)" />
+      <arg name="box_threshold" value="$(arg box_threshold)" />
+      <arg name="text_threshold" value="$(arg text_threshold)" />
+      <arg name="input_image" value="$(arg processed_image)"/>
+      <arg name="input_segmentation" value="$(arg input_segmentation)" />
     </include>
 
+    <!-- tracking node -->
+    <include file="$(find tracking_ros)/launch/track_node.launch" >
+      <arg name="ns" value="$(arg ns)" />
+      <arg name="device" value="$(arg device)" />
+      <arg name="input_image" value="$(arg processed_image)"/>
+      <arg name="input_segmentation" value="$(arg input_segmentation)" />
+      <arg name="output_image" value="$(arg segmentation_image)"/>
+      <arg name="output_segmentation" value="$(arg output_segmentation)" />
+    </include>
   </group>
 </launch>

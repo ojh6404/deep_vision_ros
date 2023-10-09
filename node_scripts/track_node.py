@@ -73,12 +73,12 @@ class TrackNode(ConnectionBasedTransport):
         if self.mask is not None:
             self.mask, self.logit = self.xmem.track(self.image)
             masks = self.decompose_mask(self.mask)
-            seg_mask = self.bridge.cv2_to_imgmsg(
+            seg_msg = self.bridge.cv2_to_imgmsg(
                 self.mask.astype(np.int32), encoding="32SC1"
             )
-            seg_mask.header.stamp = rospy.Time.now()
-            seg_mask.header.frame_id = img_msg.header.frame_id
-            self.pub_segmentation_img.publish(seg_mask)
+            seg_msg.header.stamp = rospy.Time.now()
+            seg_msg.header.frame_id = img_msg.header.frame_id
+            self.pub_segmentation_img.publish(seg_msg)
             self.painted_image = self.image.copy()
             for i, mask in enumerate(masks):
                 self.painted_image = mask_painter(self.painted_image, mask, i)

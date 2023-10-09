@@ -44,7 +44,6 @@
     <!-- tracking node -->
     <include file="$(find tracking_ros)/launch/track_node.launch" >
       <arg name="ns" value="$(arg ns)" />
-      <arg name="model_type" value="$(arg model_type)" />
       <arg name="device" value="$(arg device)" />
       <arg name="input_image" value="$(arg processed_image)"/>
       <arg name="input_segmentation" value="$(arg input_segmentation)" />
