@@ -22,7 +22,7 @@ class SAMNode(ConnectionBasedTransport):
 
         sam_checkpoint = download_checkpoint("sam_"+ model_type, model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
-        self.prompt_mode = rospy.get_param("~prompt_mode", True)
+        self.prompt_mode = rospy.get_param("~mode", "interactive") == "interactive"
 
         # sam
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)

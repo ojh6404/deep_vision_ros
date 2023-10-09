@@ -21,12 +21,12 @@ class TrackNode(ConnectionBasedTransport):
 
         xmem_checkpoint = download_checkpoint("xmem", model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
+        self.from_detic = rospy.get_param("~mode", None) == "detic"
 
         # xmem
         self.xmem = BaseTracker(
             xmem_checkpoint, tracker_config_file, device=self.device
         )
-
 
         self.bridge = CvBridge()
         self.pub_vis_img = self.advertise("~output_image", Image, queue_size=1)
@@ -35,10 +35,17 @@ class TrackNode(ConnectionBasedTransport):
         )
 
         self.mask = None
-        input_seg_msg = rospy.wait_for_message("~input_segmentation", Image)
+        if self.from_detic: # TODO: make this more general
+            from detic_ros.msg import SegmentationInfo
+            detic_seg_msg = rospy.wait_for_message("/docker/detic_segmentor/segmentation_info", SegmentationInfo)
+            self.classes = detic_seg_msg.detected_classes
+            rospy.loginfo("classes: {}".format(self.classes))
+            self.template_mask = self.bridge.imgmsg_to_cv2(detic_seg_msg.segmentation, desired_encoding="32SC1")
+        else:
+            input_seg_msg = rospy.wait_for_message("~input_segmentation", Image)
+            self.template_mask = self.bridge.imgmsg_to_cv2(input_seg_msg, desired_encoding="32SC1")
         input_img_msg = rospy.wait_for_message("~input_image", Image)
         self.image = self.bridge.imgmsg_to_cv2(input_img_msg, desired_encoding="rgb8")
-        self.template_mask = self.bridge.imgmsg_to_cv2(input_seg_msg, desired_encoding="32SC1")
         self.num_mask = len(np.unique(self.template_mask)) - 1
         self.mask, self.logit = self.xmem.track(
             frame=self.image, first_frame_annotation=self.template_mask
