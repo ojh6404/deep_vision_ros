@@ -1,10 +1,11 @@
 <launch>
   <arg name="ns" default="tracking_ros" />
-  <arg name="model_type" default="vit_h" />
   <arg name="device" default="cuda:0" />
   <arg name="mode" default="interactive" /> <!-- interactive, all, grounded, detic -->
   <arg name="num_slots" default="-1" />
-  <arg name="host" default="localhost" />
+
+  <!-- sam -->
+  <arg name="model_type" default="vit_h" />
 
   <!-- grounding dino -->
   <arg name="text_prompt"/>
@@ -12,6 +13,7 @@
   <arg name="text_threshold" default="0.25" />
 
   <!-- detic -->
+  <arg name="host" default="localhost" />
   <arg name="vocabulary" default="lvis" />
   <arg name="custom_vocabulary" default="" />
   <arg name="detic_model" default="swin" />
