@@ -1,16 +1,18 @@
 <launch>
   <arg name="ns" default="tracking_ros" />
-  <arg name="model_type" default="vit_b" />
+  <arg name="model_type" default="vit_h" />
   <arg name="device" default="cuda:0" />
-  
+
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="input_point" default="/$(arg ns)/processed_image/screenpoint" />
   <arg name="input_bbox" default="/$(arg ns)/processed_image/screenrectangle" />
   <arg name="processed_image" default="/$(arg ns)/processed_image"/>
   <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
-  <arg name="segmentation_mask" default="/$(arg ns)/segmentation_mask" />
-  
+  <arg name="prompt_image" default="/$(arg ns)/prompt_image" />
+  <arg name="input_segmentation" default="/$(arg ns)/input_segmentation" />
+  <arg name="output_segmentation" default="/$(arg ns)/segmentation" />
+
 
   <group ns="$(arg ns)">
     <!-- process image and repub -->
@@ -40,7 +42,7 @@
 
     <!-- visualize segmentation -->
     <node name="image_view" pkg="image_view" type="image_view" respawn="false" output="screen">
-    <remap from="image" to="$(arg segmentation_image)" />
+    <remap from="image" to="$(arg prompt_image)" />
     </node>
 
   </group>
