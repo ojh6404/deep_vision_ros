@@ -9,11 +9,8 @@ from geometry_msgs.msg import PointStamped, PolygonStamped
 from std_srvs.srv import Empty, EmptyResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
-
 from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
-from tracking_ros.utils.util import (
-    download_checkpoint,
-)
+from tracking_ros.utils.util import download_checkpoint
 from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
 
 class SAMNode(ConnectionBasedTransport):

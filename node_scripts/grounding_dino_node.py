@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
 import torch
-
 import rospy
 from cv_bridge import CvBridge
 
