@@ -18,8 +18,10 @@
   <arg name="custom_vocabulary" default="" />
   <arg name="detic_model" default="swin" />
 
+  <arg name="tune" default="false"/>
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="decompressed_image" default="/$(arg ns)/decompressed_image"/>
   <arg name="input_point" default="/$(arg ns)/processed_image/screenpoint" />
   <arg name="input_bbox" default="/$(arg ns)/processed_image/screenrectangle" />
   <arg name="processed_image" default="/$(arg ns)/processed_image"/>
@@ -30,15 +32,36 @@
 
 
   <group ns="$(arg ns)">
+    <group if="$(eval bool(tune))">
+      <!-- process image and repub -->
+      <node if="$(arg compressed)" name="raw_image_transport" pkg="image_transport" type="republish" args="compressed">
+        <remap from="in" to="$(arg input_image)"/>
+        <remap from="out" to="$(arg decompressed_image)"/>
+      </node>
+      <node unless="$(arg compressed)" name="raw_image_transport" pkg="image_transport" type="republish" args="raw">
+        <remap from="in" to="$(arg input_image)"/>
+        <remap from="out" to="$(arg decompressed_image)"/>
+      </node>
+      <node name="tune_image" pkg="tracking_ros" type="tune_node.py" output="screen">
+        <remap from="~in" to="$(arg decompressed_image)"/>
+        <remap from="~out" to="$(arg processed_image)"/>
+        <rosparam subst_value="true" >
+            config: $(find tracking_ros)/$(arg tune)
+        </rosparam>
+      </node>
+    </group>
+
     <!-- process image and repub -->
-    <node if="$(arg compressed)" name="raw_image_transport" pkg="image_transport" type="republish" args="compressed">
-      <remap from="in" to="$(arg input_image)"/>
-      <remap from="out" to="$(arg processed_image)"/>
-    </node>
-    <node unless="$(arg compressed)" name="raw_image_transport" pkg="image_transport" type="republish" args="raw">
-      <remap from="in" to="$(arg input_image)"/>
-      <remap from="out" to="$(arg processed_image)"/>
-    </node>
+    <group unless="$(eval bool(tune))">
+      <node if="$(arg compressed)" name="raw_image_transport" pkg="image_transport" type="republish" args="compressed">
+        <remap from="in" to="$(arg input_image)"/>
+        <remap from="out" to="$(arg processed_image)"/>
+      </node>
+      <node unless="$(arg compressed)" name="raw_image_transport" pkg="image_transport" type="republish" args="raw">
+        <remap from="in" to="$(arg input_image)"/>
+        <remap from="out" to="$(arg processed_image)"/>
+      </node>
+    </group>
 
     <!-- sam node -->
     <include if="$(eval mode=='interactive' or mode=='all')"
