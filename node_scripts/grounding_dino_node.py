@@ -7,7 +7,6 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from jsk_topic_tools import ConnectionBasedTransport
 
-from segment_anything import sam_model_registry, SamPredictor
 from tracking_ros.utils.util import download_checkpoint
 from tracking_ros.utils.dino_utils import get_grounded_bbox
 from groundingdino.util.inference import load_model
@@ -19,8 +18,11 @@ class GroundingDinoNode(ConnectionBasedTransport):
 
         model_dir = rospy.get_param("~model_dir")
         model_type = rospy.get_param("~model_type", "vit_b")
+        self.is_hq = "hq" in model_type
+        model_type = model_type.replace("_hq", "")
 
-        sam_checkpoint = download_checkpoint("sam_" + model_type, model_dir)
+        model_name = "sam_hq_" + model_type if self.is_hq else "sam_" + model_type
+        sam_checkpoint = download_checkpoint(model_name, model_dir)
         dino_checkpoint = download_checkpoint("dino", model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
 
@@ -34,6 +36,18 @@ class GroundingDinoNode(ConnectionBasedTransport):
         self.text_threshold = rospy.get_param("~text_threshold", 0.25)
 
         # sam
+        if self.is_hq:
+            from segment_anything_hq import (
+                sam_model_registry,
+                SamPredictor,
+                SamAutomaticMaskGenerator,
+            )
+        else:
+            from segment_anything import (
+                sam_model_registry,
+                SamPredictor,
+                SamAutomaticMaskGenerator,
+            )
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
         self.predictor = SamPredictor(self.sam)

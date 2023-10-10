@@ -34,8 +34,6 @@ class SAMNode(ConnectionBasedTransport):
                 SamPredictor,
                 SamAutomaticMaskGenerator,
             )
-
-            sam_checkpoint = "/home/oh/ros/pr2_ws/src/perception/tracking_ros/checkpoints/sam_hq_vit_h.pth"
         else:
             from segment_anything import (
                 sam_model_registry,
