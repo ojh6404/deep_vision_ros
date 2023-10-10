@@ -19,6 +19,7 @@
   <arg name="detic_model" default="swin" />
 
   <arg name="tune" default="false"/>
+  <arg name="mask" default="false"/>
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="decompressed_image" default="/$(arg ns)/decompressed_image"/>
@@ -26,6 +27,7 @@
   <arg name="input_bbox" default="/$(arg ns)/processed_image/screenrectangle" />
   <arg name="processed_image" default="/$(arg ns)/processed_image"/>
   <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
+  <arg name="masked_image" default="/$(arg ns)/masked_image"/>
   <arg name="prompt_image" default="/$(arg ns)/prompt_image" />
   <arg name="input_segmentation" default="/$(arg ns)/input_segmentation" />
   <arg name="output_segmentation" default="/$(arg ns)/segmentation" />
@@ -108,10 +110,12 @@
       <arg name="ns" value="$(arg ns)" />
       <arg name="device" value="$(arg device)" />
       <arg name="mode" value="$(arg mode)" />
+      <arg name="mask" value="$(arg mask)" />
       <arg name="input_image" value="$(arg processed_image)"/>
       <arg name="input_segmentation" value="$(arg input_segmentation)" />
       <arg name="output_image" value="$(arg segmentation_image)"/>
       <arg name="output_segmentation" value="$(arg output_segmentation)" />
+      <arg name="masked_image" value="$(arg masked_image)"/>
     </include>
 
     <!-- interactive prompter -->

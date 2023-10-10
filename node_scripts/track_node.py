@@ -17,6 +17,8 @@ class TrackNode(ConnectionBasedTransport):
         model_dir = rospy.get_param("~model_dir")
         tracker_config_file = rospy.get_param("~tracker_config")
 
+        self.del_bg = rospy.get_param("~del_bg", False)
+
         xmem_checkpoint = download_checkpoint("xmem", model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
         self.from_detic = rospy.get_param("~mode", None) == "detic"
@@ -31,6 +33,9 @@ class TrackNode(ConnectionBasedTransport):
         self.pub_segmentation_img = self.advertise(
             "~segmentation", Image, queue_size=1
         )
+
+        if self.del_bg:
+            self.pub_masked_img = self.advertise("~masked_image", Image, queue_size=1)
 
         self.mask = None
         if self.from_detic: # TODO: make this more general
@@ -95,6 +100,16 @@ class TrackNode(ConnectionBasedTransport):
             vis_img_msg.header.stamp = rospy.Time.now()
             vis_img_msg.header.frame_id = img_msg.header.frame_id
             self.pub_vis_img.publish(vis_img_msg)
+
+            if self.del_bg:
+                masked_image = self.image.copy()
+                masked_image[self.mask == 0] = 0
+                masked_img_msg = self.bridge.cv2_to_imgmsg(
+                    masked_image, encoding="rgb8"
+                )
+                masked_img_msg.header.stamp = rospy.Time.now()
+                masked_img_msg.header.frame_id = img_msg.header.frame_id
+                self.pub_masked_img.publish(masked_img_msg)
 
 if __name__ == "__main__":
     rospy.init_node("track_node")
