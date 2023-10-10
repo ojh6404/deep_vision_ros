@@ -12,6 +12,7 @@ from tracking_ros.utils.util import download_checkpoint
 from tracking_ros.utils.dino_utils import get_grounded_bbox
 from groundingdino.util.inference import load_model
 
+
 class GroundingDinoNode(ConnectionBasedTransport):
     def __init__(self):
         super(GroundingDinoNode, self).__init__()
@@ -19,14 +20,16 @@ class GroundingDinoNode(ConnectionBasedTransport):
         model_dir = rospy.get_param("~model_dir")
         model_type = rospy.get_param("~model_type", "vit_b")
 
-        sam_checkpoint = download_checkpoint("sam_"+ model_type, model_dir)
+        sam_checkpoint = download_checkpoint("sam_" + model_type, model_dir)
         dino_checkpoint = download_checkpoint("dino", model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
 
         # grounding dino
         dino_config = rospy.get_param("~dino_config")
         self.text_prompt = rospy.get_param("~text_prompt")
-        self.grounding_dino = load_model(dino_config, dino_checkpoint, device=self.device)
+        self.grounding_dino = load_model(
+            dino_config, dino_checkpoint, device=self.device
+        )
         self.box_threshold = rospy.get_param("~box_threshold", 0.35)
         self.text_threshold = rospy.get_param("~text_threshold", 0.25)
 
@@ -36,15 +39,12 @@ class GroundingDinoNode(ConnectionBasedTransport):
         self.predictor = SamPredictor(self.sam)
 
         self.bridge = CvBridge()
-        self.pub_segmentation_img = self.advertise(
-            "~segmentation", Image, queue_size=1
-        )
+        self.pub_segmentation_img = self.advertise("~segmentation", Image, queue_size=1)
 
         # for place holder init
         self.embedded_image = None
         self.image = None
         self.template_mask = None
-
 
     def subscribe(self):
         self.sub_image = rospy.Subscriber(
@@ -64,19 +64,21 @@ class GroundingDinoNode(ConnectionBasedTransport):
         bbox=None,
         labels=None,
         mask_input=None,
-        multimask:bool=True,
+        multimask: bool = True,
     ):
         bbox = torch.Tensor(bbox).to(self.device)
         transformed_boxes = self.predictor.transform.apply_boxes_torch(
-            bbox, self.image.shape[:2])
+            bbox, self.image.shape[:2]
+        )
         prompts = dict(
-            point_coords= None,
-            point_labels= None,
-            boxes= transformed_boxes,
-            multimask_output= multimask,
+            point_coords=None,
+            point_labels=None,
+            boxes=transformed_boxes,
+            multimask_output=multimask,
         )
         masks, scores, logits = self.predictor.predict_torch(
-            **prompts) # [N, H, W], B : number of prompts, N : number of masks recommended
+            **prompts
+        )  # [N, H, W], B : number of prompts, N : number of masks recommended
         return masks, logits
 
     def compose_mask(self, masks):
@@ -114,7 +116,7 @@ class GroundingDinoNode(ConnectionBasedTransport):
             rospy.signal_shutdown("grounded detection done")
         else:  # init
             bboxes, phrases = get_grounded_bbox(
-                model = self.grounding_dino,
+                model=self.grounding_dino,
                 image=self.image,
                 text_prompt=self.text_prompt,
                 box_threshold=self.box_threshold,
@@ -124,13 +126,13 @@ class GroundingDinoNode(ConnectionBasedTransport):
                 rospy.loginfo("bbox: {}, phrase: {}".format(bbox, phrases[i]))
             self.predictor.set_image(self.image)
             self.masks, self.logits = self.process_prompt(
-                None,
-                bboxes,
-                None,
-                None,
-                False)
-            self.masks = [mask.squeeze(0).cpu().numpy().astype(np.uint8) for mask in self.masks]
+                None, bboxes, None, None, False
+            )
+            self.masks = [
+                mask.squeeze(0).cpu().numpy().astype(np.uint8) for mask in self.masks
+            ]
             self.template_mask = self.compose_mask(self.masks)
+
 
 if __name__ == "__main__":
     rospy.init_node("grounding_dino_node")

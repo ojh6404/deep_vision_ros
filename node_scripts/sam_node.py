@@ -12,6 +12,7 @@ from jsk_topic_tools import ConnectionBasedTransport
 from tracking_ros.utils.util import download_checkpoint
 from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
 
+
 class SAMNode(ConnectionBasedTransport):
     def __init__(self):
         super(SAMNode, self).__init__()
@@ -28,10 +29,19 @@ class SAMNode(ConnectionBasedTransport):
 
         # sam
         if self.is_hq:
-            from segment_anything_hq import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
+            from segment_anything_hq import (
+                sam_model_registry,
+                SamPredictor,
+                SamAutomaticMaskGenerator,
+            )
+
             sam_checkpoint = "/home/oh/ros/pr2_ws/src/perception/tracking_ros/checkpoints/sam_hq_vit_h.pth"
         else:
-            from segment_anything import sam_model_registry, SamPredictor, SamAutomaticMaskGenerator
+            from segment_anything import (
+                sam_model_registry,
+                SamPredictor,
+                SamAutomaticMaskGenerator,
+            )
         self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
         if self.prompt_mode:
@@ -61,10 +71,8 @@ class SAMNode(ConnectionBasedTransport):
             self.num_slots = rospy.get_param("~num_slots", -1)
 
         self.bridge = CvBridge()
-        self.pub_segmentation_img = self.advertise(
-            "~segmentation", Image, queue_size=1
-        )
-        self.label_mode = True # True: Positive, False: Negative
+        self.pub_segmentation_img = self.advertise("~segmentation", Image, queue_size=1)
+        self.label_mode = True  # True: Positive, False: Negative
 
         self.points = []
         self.labels = []
@@ -80,7 +88,6 @@ class SAMNode(ConnectionBasedTransport):
         self.image = None
         self.bbox = None
         self.template_mask = None
-
 
     def subscribe(self):
         self.sub_image = rospy.Subscriber(
@@ -155,7 +162,7 @@ class SAMNode(ConnectionBasedTransport):
         res = EmptyResponse()
         return res
 
-    def track_trigger_callback(self, srv): # TODO
+    def track_trigger_callback(self, srv):  # TODO
         rospy.loginfo("Tracking start...")
         self.template_mask = self.compose_mask(self.masks)
         res = EmptyResponse()
@@ -167,13 +174,17 @@ class SAMNode(ConnectionBasedTransport):
         res = EmptyResponse()
         return res
 
-
     def point_callback(self, point_msg):
         # if point x and point y is out of image shape, just pass
-        point_x = int(point_msg.point.x) # x is within 0 ~ width
-        point_y = int(point_msg.point.y) # y is within 0 ~ height
+        point_x = int(point_msg.point.x)  # x is within 0 ~ width
+        point_y = int(point_msg.point.y)  # y is within 0 ~ height
 
-        if point_x < 1 or point_x > (self.image.shape[1] -1 ) or point_y < 1 or point_y > (self.image.shape[0] -1):
+        if (
+            point_x < 1
+            or point_x > (self.image.shape[1] - 1)
+            or point_y < 1
+            or point_y > (self.image.shape[0] - 1)
+        ):
             rospy.logwarn("point {} is out of image shape".format([point_x, point_y]))
             return
 
@@ -221,37 +232,40 @@ class SAMNode(ConnectionBasedTransport):
             multimask=self.multimask,
         )
 
-
     def process_prompt(
         self,
         points=None,
         bbox=None,
         labels=None,
         mask_input=None,
-        multimask:bool=True,
+        multimask: bool = True,
     ):
         """
         it is used in first frame
         return: mask, logit, painted image(mask+point)
         """
         prompts = dict(
-            point_coords= points,
-            point_labels= labels,
+            point_coords=points,
+            point_labels=labels,
             box=bbox,
-            mask_input= mask_input, # TODO
-            multimask_output= multimask,
+            mask_input=mask_input,  # TODO
+            multimask_output=multimask,
         )
         masks, scores, logits = self.predictor.predict(
-            **prompts) # [N, H, W], B : number of prompts, N : number of masks recommended
-        mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)] # choose the best mask [H, W]
+            **prompts
+        )  # [N, H, W], B : number of prompts, N : number of masks recommended
+        mask, logit = (
+            masks[np.argmax(scores)],
+            logits[np.argmax(scores)],
+        )  # choose the best mask [H, W]
 
         # refine mask using logit
         prompts = dict(
-            point_coords= points,
-            point_labels= labels,
+            point_coords=points,
+            point_labels=labels,
             box=bbox,
-            mask_input= logit[None, :, :],
-            multimask_output= multimask,
+            mask_input=logit[None, :, :],
+            multimask_output=multimask,
         )
         masks, scores, logits = self.predictor.predict(**prompts)
         mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
@@ -285,7 +299,6 @@ class SAMNode(ConnectionBasedTransport):
                 rosnode.kill_nodes([node])
         rospy.signal_shutdown("Tracking done")
 
-
     def callback(self, img_msg):
         self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
         if self.template_mask is not None:  # track start
@@ -306,25 +319,24 @@ class SAMNode(ConnectionBasedTransport):
                 for i, mask in enumerate(self.masks + [self.mask]):
                     self.painted_image = mask_painter(self.painted_image, mask, i)
                 self.painted_image = point_drawer(
-                    self.painted_image,
-                    self.points,
-                    self.labels
+                    self.painted_image, self.points, self.labels
                 )
                 self.painted_image = bbox_drawer(self.painted_image, self.bbox)
 
-                vis_img_msg = self.bridge.cv2_to_imgmsg(self.painted_image, encoding="rgb8")
+                vis_img_msg = self.bridge.cv2_to_imgmsg(
+                    self.painted_image, encoding="rgb8"
+                )
                 vis_img_msg.header.stamp = rospy.Time.now()
                 vis_img_msg.header.frame_id = img_msg.header.frame_id
                 self.pub_vis_img.publish(vis_img_msg)
             else:
-                masks = self.predictor.generate(self.image) # dict of masks
+                masks = self.predictor.generate(self.image)  # dict of masks
                 self.masks = [mask["segmentation"] for mask in masks]
                 if self.num_slots > 0:
-                    self.masks = [mask["segmentation"] for mask in masks][:self.num_slots]
+                    self.masks = [mask["segmentation"] for mask in masks][
+                        : self.num_slots
+                    ]
                 self.template_mask = self.compose_mask(self.masks)
-
-
-
 
 
 if __name__ == "__main__":

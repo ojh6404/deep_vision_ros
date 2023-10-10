@@ -6,6 +6,7 @@ import os
 from sensor_msgs.msg import Image
 from tunable_filter.composite_zoo import HSVBlurCropResolFilter
 
+
 class ImageTuneNode(object):
     def __init__(self):
         super(ImageTuneNode, self).__init__()
@@ -38,6 +39,7 @@ class ImageTuneNode(object):
             tunable.start_tuning(self.image)
             tunable.dump_yaml(self.config)
             self.image_tuner = HSVBlurCropResolFilter.from_yaml(self.config)
+
 
 if __name__ == "__main__":
     rospy.init_node("image_tune_node")
