@@ -4,7 +4,6 @@ project(tracking_ros)
 find_package(catkin REQUIRED COMPONENTS
   catkin_virtualenv
   # dynamic_reconfigure
-  jsk_data
 )
 
 # ------------------------------------------------------------------------------------
@@ -19,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_python_setup()
 catkin_package(
   CATKIN_DEPENDS
-  jsk_data
 )
 
 catkin_generate_virtualenv(
