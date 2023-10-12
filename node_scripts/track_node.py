@@ -4,13 +4,12 @@ import rospy
 from cv_bridge import CvBridge
 
 from sensor_msgs.msg import Image
-from jsk_topic_tools import ConnectionBasedTransport
 
 from tracking_ros.tracker.base_tracker import BaseTracker
 from tracking_ros.utils.util import download_checkpoint
 from tracking_ros.utils.painter import mask_painter
 
-class TrackNode(ConnectionBasedTransport):
+class TrackNode(object): # should not be ConnectionBasedNode cause xmem tracker needs continuous input
     def __init__(self):
         super(TrackNode, self).__init__()
 
@@ -29,8 +28,15 @@ class TrackNode(ConnectionBasedTransport):
         )
 
         self.bridge = CvBridge()
-        self.pub_vis_img = self.advertise("~output_image", Image, queue_size=1)
-        self.pub_segmentation_img = self.advertise(
+        self.sub_image = rospy.Subscriber(
+            "~input_image",
+            Image,
+            self.callback,
+            queue_size=1,
+            buff_size=2**24,
+        )
+        self.pub_vis_img = rospy.Publisher("~output_image", Image, queue_size=1)
+        self.pub_segmentation_img = rospy.Publisher(
             "~segmentation", Image, queue_size=1
         )
 
@@ -57,19 +63,6 @@ class TrackNode(ConnectionBasedTransport):
             frame=self.image, first_frame_annotation=self.template_mask
         )
 
-
-    def subscribe(self):
-        self.sub_image = rospy.Subscriber(
-            "~input_image",
-            Image,
-            self.callback,
-            queue_size=1,
-            buff_size=2**24,
-        )
-
-    def unsubscribe(self):
-        self.sub_image.unregister()
-        self.xmem.clear_memory()
 
     def decompose_mask(self, mask):
         """
