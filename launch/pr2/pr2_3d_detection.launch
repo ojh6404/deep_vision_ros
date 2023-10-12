@@ -7,7 +7,7 @@
   <arg name="LOAD_STATEMENT" value="standalone" if="$(arg standalone)"/>
 
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
-  <arg name="input_segmentation" default="/$(arg ns)/segmentation"/>
+  <arg name="input_segmentation" default="/$(arg namespace)/segmentation"/>
   <arg name="input_depth" default="/kinect_head/depth_registered/image_rect"/>
   <arg name="input_camera_info" default="/kinect_head/rgb/camera_info"/>
   <arg name="target_frame_id" default="base_footprint" />
