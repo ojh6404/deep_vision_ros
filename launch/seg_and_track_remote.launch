@@ -65,21 +65,6 @@
       </node>
     </group>
 
-    <!-- sam node -->
-    <include if="$(eval mode=='interactive' or mode=='all')"
-             file="$(find tracking_ros)/launch/sam_node.launch" >
-      <arg name="ns" value="$(arg ns)" />
-      <arg name="model_type" value="$(arg model_type)" />
-      <arg name="device" value="$(arg device)" />
-      <arg name="mode" value="$(arg mode)" />
-      <arg name="num_slots" value="$(arg num_slots)" />
-      <arg name="input_point" value="$(arg input_point)" />
-      <arg name="input_bbox" value="$(arg input_bbox)" />
-      <arg name="input_image" value="$(arg processed_image)"/>
-      <arg name="prompt_image" value="$(arg prompt_image)"/>
-      <arg name="input_segmentation" value="$(arg input_segmentation)" />
-    </include>
-
     <!-- grounded detection node -->
     <include if="$(eval mode=='grounded')"
              file="$(find tracking_ros)/launch/grounding_dino_node.launch" >
