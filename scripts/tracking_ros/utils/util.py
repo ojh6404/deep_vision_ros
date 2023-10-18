@@ -35,6 +35,8 @@ def download_checkpoint(model, folder):
                 SAM_CHECKPOINT_URL_DICT[model], folder, SAM_CHECKPOINT_DICT[model]
             )
             return filepath
+        filepath = os.path.join(folder, SAM_CHECKPOINT_DICT[model])
+        url = SAM_CHECKPOINT_URL_DICT[model]
     elif model == "xmem":
         filepath = os.path.join(folder, XMEM_CHECKPOINT)
         url = XMEM_CHECKPOINT_URL
@@ -66,7 +68,7 @@ def download_checkpoint_from_google_drive(url, folder, filename):
     if not os.path.exists(filepath):
         print(
             "Downloading checkpoints from Google Drive... tips: If you cannot see the progress bar, please try to download it manuall \
-              and put it in the checkpointes directory. E2FGVI-HQ-CVPR22.pth: https://github.com/MCG-NKU/E2FGVI(E2FGVI-HQ model)"
+              and put it in the checkpointes directory."
         )
         gdown.download(url, filepath, quiet=False)
         print("Downloaded successfully!")
