@@ -16,11 +16,8 @@ class TrackNode(object): # should not be ConnectionBasedNode cause xmem tracker 
         model_dir = rospy.get_param("~model_dir")
         tracker_config_file = rospy.get_param("~tracker_config")
 
-        self.del_bg = rospy.get_param("~del_bg", False)
-
         xmem_checkpoint = download_checkpoint("xmem", model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
-        self.from_detic = rospy.get_param("~mode", None) == "detic"
 
         # xmem
         self.xmem = BaseTracker(
@@ -40,22 +37,9 @@ class TrackNode(object): # should not be ConnectionBasedNode cause xmem tracker 
             "~segmentation", Image, queue_size=1
         )
 
-        if self.del_bg:
-            self.pub_masked_img = self.advertise("~masked_image", Image, queue_size=1)
-
         self.mask = None
-        if self.from_detic: # TODO: make this more general
-            from detic_ros.msg import SegmentationInfo
-            import rosnode
-            detic_seg_msg = rospy.wait_for_message("/docker/detic_segmentor/segmentation_info", SegmentationInfo)
-            self.classes = detic_seg_msg.detected_classes
-            rospy.loginfo("classes: {}".format(self.classes))
-            self.template_mask = self.bridge.imgmsg_to_cv2(detic_seg_msg.segmentation, desired_encoding="32SC1")
-            # kill detic node for memory
-            rosnode.kill_nodes(["/docker/detic_segmentor"])
-        else:
-            input_seg_msg = rospy.wait_for_message("~input_segmentation", Image)
-            self.template_mask = self.bridge.imgmsg_to_cv2(input_seg_msg, desired_encoding="32SC1")
+        input_seg_msg = rospy.wait_for_message("~input_segmentation", Image)
+        self.template_mask = self.bridge.imgmsg_to_cv2(input_seg_msg, desired_encoding="32SC1")
         input_img_msg = rospy.wait_for_message("~input_image", Image)
         self.image = self.bridge.imgmsg_to_cv2(input_img_msg, desired_encoding="rgb8")
         self.num_mask = len(np.unique(self.template_mask)) - 1
@@ -93,16 +77,6 @@ class TrackNode(object): # should not be ConnectionBasedNode cause xmem tracker 
             vis_img_msg.header.stamp = rospy.Time.now()
             vis_img_msg.header.frame_id = img_msg.header.frame_id
             self.pub_vis_img.publish(vis_img_msg)
-
-            if self.del_bg:
-                masked_image = self.image.copy()
-                masked_image[self.mask == 0] = 0
-                masked_img_msg = self.bridge.cv2_to_imgmsg(
-                    masked_image, encoding="rgb8"
-                )
-                masked_img_msg.header.stamp = rospy.Time.now()
-                masked_img_msg.header.frame_id = img_msg.header.frame_id
-                self.pub_masked_img.publish(masked_img_msg)
 
 if __name__ == "__main__":
     rospy.init_node("track_node")
