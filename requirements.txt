@@ -21,4 +21,4 @@ supervision==0.6.0
 pycocotools
 git+https://github.com/cheind/py-thin-plate-spline
 git+https://github.com/facebookresearch/segment-anything.git
-git+https://github.com/IDEA-Research/GroundingDINO.git
+git+https://github.com/hkchengrex/Cutie.git

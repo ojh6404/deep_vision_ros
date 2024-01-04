@@ -7,12 +7,6 @@
   <!-- sam -->
   <arg name="model_type" default="vit_h_hq" /> <!-- vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
 
-  <!-- grounding dino -->
-  <arg name="text_prompt"/>
-  <arg name="box_threshold" default="0.35" />
-  <arg name="text_threshold" default="0.25" />
-
-
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="decompressed_image" default="/$(arg ns)/decompressed_image"/>
@@ -37,44 +31,36 @@
     </node>
 
     <!-- sam node -->
-    <include if="$(eval mode=='interactive' or mode=='all')"
-             file="$(find tracking_ros)/launch/sam_node.launch" >
-      <arg name="ns" value="$(arg ns)" />
-      <arg name="model_type" value="$(arg model_type)" />
-      <arg name="device" value="$(arg device)" />
-      <arg name="mode" value="$(arg mode)" />
-      <arg name="num_slots" value="$(arg num_slots)" />
-      <arg name="input_point" value="$(arg input_point)" />
-      <arg name="input_bbox" value="$(arg input_bbox)" />
-      <arg name="input_image" value="$(arg processed_image)"/>
-      <arg name="prompt_image" value="$(arg prompt_image)"/>
-      <arg name="input_segmentation" value="$(arg input_segmentation)" />
-    </include>
-
-    <!-- grounded detection node -->
-    <include if="$(eval mode=='grounded')"
-             file="$(find tracking_ros)/launch/grounding_dino_node.launch" >
-      <arg name="ns" value="$(arg ns)" />
-      <arg name="model_type" value="$(arg model_type)" />
-      <arg name="device" value="$(arg device)" />
-      <arg name="text_prompt" value="$(arg text_prompt)" />
-      <arg name="box_threshold" value="$(arg box_threshold)" />
-      <arg name="text_threshold" value="$(arg text_threshold)" />
-      <arg name="input_image" value="$(arg processed_image)"/>
-      <arg name="input_segmentation" value="$(arg input_segmentation)" />
-    </include>
+    <node name="sam_node"
+            pkg="tracking_ros" type="sam_node.py"
+            output="screen" >
+        <remap from="~input_image" to="$(arg input_image)" />
+        <remap from="~output_image" to="$(arg prompt_image)" />
+        <remap from="~input_point" to="$(arg input_point)" />
+        <remap from="~input_bbox" to="$(arg input_bbox)" />
+        <remap from="~segmentation" to="$(arg input_segmentation)" />
+        <rosparam subst_value="true" >
+            model_path: $(find tracking_ros)/trained_data/sam/sam_$(arg model_type).pth
+            device: $(arg device)
+            model_type: $(arg model_type)
+            mode: $(arg mode)
+            num_slots: $(arg num_slots)
+        </rosparam>
+    </node>
 
     <!-- tracking node -->
-    <!-- <include file="$(find tracking_ros)/launch/track_node.launch" > -->
-    <include file="$(find tracking_ros)/launch/cutie_node.launch" >
-      <arg name="ns" value="$(arg ns)" />
-      <arg name="device" value="$(arg device)" />
-      <arg name="mode" value="$(arg mode)" />
-      <arg name="input_image" value="$(arg processed_image)"/>
-      <arg name="input_segmentation" value="$(arg input_segmentation)" />
-      <arg name="output_image" value="$(arg segmentation_image)"/>
-      <arg name="output_segmentation" value="$(arg output_segmentation)" />
-    </include>
+    <node name="cutie_node"
+          pkg="tracking_ros" type="cutie_node.py"
+          output="screen" >
+        <remap from="~input_image" to="$(arg input_image)" />
+        <remap from="~input_segmentation" to="$(arg input_segmentation)" />
+        <remap from="~output_image" to="$(arg segmentation_image)" />
+        <remap from="~segmentation" to="$(arg output_segmentation)" />
+        <rosparam subst_value="true" >
+            device: $(arg device)
+            weights: $(find tracking_ros)/trained_data/cutie/cutie-base-mega.pth
+        </rosparam>
+    </node>
 
     <!-- interactive prompter -->
     <group if="$(eval mode=='interactive')">

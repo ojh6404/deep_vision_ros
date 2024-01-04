@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(tracking_ros)
 
 find_package(catkin REQUIRED COMPONENTS
   catkin_virtualenv
+  jsk_data
   # dynamic_reconfigure
 )
 
@@ -13,11 +14,13 @@ find_package(catkin REQUIRED COMPONENTS
 # # download and install sample data
 # add_custom_target(${PROJECT_NAME}_install_sample_data ALL COMMAND python$ENV{ROS_PYTHON_VERSION} ${PROJECT_SOURCE_DIR}/scripts/install_sample_data.py)
 # # download and install trained data
-# add_custom_target(${PROJECT_NAME}_install_trained_data ALL COMMAND python$ENV{ROS_PYTHON_VERSION} ${PROJECT_SOURCE_DIR}/scripts/install_trained_data.py)
+add_custom_target(${PROJECT_NAME}_install_trained_data ALL COMMAND python$ENV{ROS_PYTHON_VERSION} ${PROJECT_SOURCE_DIR}/scripts/install_trained_data.py)
+
 
 catkin_python_setup()
 catkin_package(
   CATKIN_DEPENDS
+  jsk_data
 )
 
 catkin_generate_virtualenv(
@@ -27,6 +30,17 @@ catkin_generate_virtualenv(
   ISOLATE_REQUIREMENTS FALSE
   CHECK_VENV FALSE
 )
+
+# file(GLOB SCRIPT_PROGRAMS scripts/*.py)
+# catkin_install_python(
+#   PROGRAMS ${SCRIPT_PROGRAMS}
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/scripts/)
+# file(GLOB SCRIPTS_FILES node_scripts/*.py)
+# catkin_install_python(
+#   PROGRAMS ${SCRIPTS_FILES}
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+
 
 # file(GLOB SCRIPT_PROGRAMS scripts/*.py)
 # catkin_install_python(

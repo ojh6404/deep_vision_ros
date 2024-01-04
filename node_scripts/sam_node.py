@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+
 import numpy as np
+import cv2
 import rospy
 import rosnode
 from cv_bridge import CvBridge
@@ -9,26 +11,38 @@ from geometry_msgs.msg import PointStamped, PolygonStamped
 from std_srvs.srv import Empty, EmptyResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
-from tracking_ros.utils.util import download_checkpoint
-from tracking_ros.utils.painter import mask_painter, point_drawer, bbox_drawer
+from gui.interactive_utils import overlay_davis
 
+def point_drawer(image, points, labels, radius=5):
+    if points == []:
+        return image
+    for i, point in enumerate(points):
+        if labels[i] == 1:
+            color = [0, 0, 255]
+        else:
+            color = [255, 0, 0]
+        image = cv2.circle(image, tuple(point), radius, color, -1)
+    return image.astype(np.uint8)
+
+def bbox_drawer(image, bbox, color=None):
+    if bbox is None:
+        return image
+    if color is None:
+        color = [0, 255, 0]
+    image = cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]) ), color, 2)
+    return image.astype(np.uint8)
 
 class SAMNode(ConnectionBasedTransport):
     def __init__(self):
         super(SAMNode, self).__init__()
-
-        model_dir = rospy.get_param("~model_dir")
-        model_type = rospy.get_param("~model_type", "vit_h")
-        self.is_hq = "hq" in model_type
-        model_type = model_type.replace("_hq", "")
-
-        model_name = "sam_hq_" + model_type if self.is_hq else "sam_" + model_type
-        sam_checkpoint = download_checkpoint(model_name, model_dir)
         self.device = rospy.get_param("~device", "cuda:0")
         self.prompt_mode = rospy.get_param("~mode", "interactive") == "interactive"
+        model_type = rospy.get_param("~model_type", "vit_h_hq")
+        sam_checkpoint = rospy.get_param("~model_path")
+        is_hq = "hq" in model_type
 
         # sam
-        if self.is_hq:
+        if is_hq:
             from segment_anything_hq import (
                 sam_model_registry,
                 SamPredictor,
@@ -40,8 +54,11 @@ class SAMNode(ConnectionBasedTransport):
                 SamPredictor,
                 SamAutomaticMaskGenerator,
             )
-        self.sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+
+        self.sam = sam_model_registry[model_type[:5]](checkpoint=sam_checkpoint)
         self.sam.to(self.device)
+
+        # prompt mode
         if self.prompt_mode:
             self.predictor = SamPredictor(self.sam)
             self.toggle_prompt_label_service = rospy.Service(
@@ -64,25 +81,26 @@ class SAMNode(ConnectionBasedTransport):
                 "/tracking_ros/track_trigger", Empty, self.track_trigger_callback
             )
             self.pub_vis_img = self.advertise("~output_image", Image, queue_size=1)
-        else:
+        else:   # automatic mode
             self.predictor = SamAutomaticMaskGenerator(self.sam)
             self.num_slots = rospy.get_param("~num_slots", -1)
 
         self.bridge = CvBridge()
         self.pub_segmentation_img = self.advertise("~segmentation", Image, queue_size=1)
         self.label_mode = True  # True: Positive, False: Negative
+        self.track_trigger = False
 
         self.points = []
         self.labels = []
         self.multimask = False
 
-        self.logits = []
         self.masks = []
         self.num_mask = 0
 
         # for place holder init
         self.embedded_image = None
-        self.mask = None
+        self.prompt_mask = None
+        self.prompt_image = None
         self.image = None
         self.bbox = None
         self.template_mask = None
@@ -117,12 +135,14 @@ class SAMNode(ConnectionBasedTransport):
         for sub in self.subs:
             sub.unregister()
 
+
+
     def clear_points_callback(self, srv):
         rospy.loginfo("Clear prompts")
         self.points.clear()
         self.labels.clear()
         self.bbox = None
-        self.mask = None
+        self.prompt_mask = None
         self.logit = None
         res = EmptyResponse()
         return res
@@ -130,23 +150,27 @@ class SAMNode(ConnectionBasedTransport):
     def clear_masks_callback(self, srv):
         rospy.loginfo("Clear masks")
         self.masks.clear()
-        self.mask = None
+        self.prompt_mask = None
         self.logit = None
         self.painted_image = None
         res = EmptyResponse()
         return res
 
     def add_mask_callback(self, srv):
-        if self.mask is None:
+        if self.prompt_mask is None:
             rospy.logwarn("No mask to add")
             self.points.clear()
             self.labels.clear()
             return res
-        self.masks.append(self.mask)
+        self.masks.append(self.prompt_mask)
         self.points.clear()
         self.labels.clear()
         self.bbox = None
         self.num_mask += 1
+        if self.template_mask is None:
+            self.template_mask = self.prompt_mask * (self.num_mask)
+        else:
+            self.template_mask[self.prompt_mask] = self.num_mask
         rospy.loginfo("Mask added")
         res = EmptyResponse()
         return res
@@ -162,7 +186,7 @@ class SAMNode(ConnectionBasedTransport):
 
     def track_trigger_callback(self, srv):  # TODO
         rospy.loginfo("Tracking start...")
-        self.template_mask = self.compose_mask(self.masks)
+        self.track_trigger = True
         res = EmptyResponse()
         return res
 
@@ -197,7 +221,7 @@ class SAMNode(ConnectionBasedTransport):
             self.predictor.set_image(self.image)
             self.embedded_image = self.image
 
-        self.mask, self.logit = self.process_prompt(
+        self.prompt_mask, self.logit = self.process_prompt(
             points=np.array(self.points),
             labels=np.array(self.labels),
             bbox=np.array(self.bbox) if self.bbox is not None else None,
@@ -223,7 +247,7 @@ class SAMNode(ConnectionBasedTransport):
             self.predictor.set_image(self.image)
             self.embedded_image = self.image
 
-        self.mask, self.logit = self.process_prompt(
+        self.prompt_mask, self.logit = self.process_prompt(
             points=None,
             labels=None,
             bbox=np.array(self.bbox) if self.bbox is not None else None,
@@ -242,15 +266,12 @@ class SAMNode(ConnectionBasedTransport):
         it is used in first frame
         return: mask, logit, painted image(mask+point)
         """
-        prompts = dict(
+        masks, scores, logits = self.predictor.predict(
             point_coords=points,
             point_labels=labels,
             box=bbox,
             mask_input=mask_input,  # TODO
             multimask_output=multimask,
-        )
-        masks, scores, logits = self.predictor.predict(
-            **prompts
         )  # [N, H, W], B : number of prompts, N : number of masks recommended
         mask, logit = (
             masks[np.argmax(scores)],
@@ -258,16 +279,14 @@ class SAMNode(ConnectionBasedTransport):
         )  # choose the best mask [H, W]
 
         # refine mask using logit
-        prompts = dict(
+        masks, scores, logits = self.predictor.predict(
             point_coords=points,
             point_labels=labels,
             box=bbox,
             mask_input=logit[None, :, :],
             multimask_output=multimask,
         )
-        masks, scores, logits = self.predictor.predict(**prompts)
         mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
-
         return mask, logit
 
     def compose_mask(self, masks):
@@ -282,10 +301,6 @@ class SAMNode(ConnectionBasedTransport):
                 0,
                 i + 1,
             )
-            # TODO : checking overlapping mask
-            # assert len(np.unique(template_mask)) == (i + 2)
-
-        # assert len(np.unique(template_mask)) == (len(self.masks) + 1)
         return template_mask
 
     def kill_nodes(self):
@@ -299,7 +314,7 @@ class SAMNode(ConnectionBasedTransport):
 
     def callback(self, img_msg):
         self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-        if self.template_mask is not None:  # track start
+        if self.track_trigger:
             # free memory
             if self.predictor:
                 del self.predictor
@@ -314,8 +329,16 @@ class SAMNode(ConnectionBasedTransport):
         else:  # init
             if self.prompt_mode:
                 self.painted_image = self.image.copy()
-                for i, mask in enumerate(self.masks + [self.mask]):
-                    self.painted_image = mask_painter(self.painted_image, mask, i)
+                if self.template_mask is not None:
+                    paint_mask = self.template_mask.copy()
+                    paint_mask[self.prompt_mask] = self.num_mask + 1
+                    self.painted_image = overlay_davis(self.painted_image, paint_mask)
+                else:
+                    if self.prompt_mask is not None:
+                        self.painted_image = overlay_davis(
+                            self.painted_image, self.prompt_mask.astype(np.uint8)
+                        )
+
                 self.painted_image = point_drawer(
                     self.painted_image, self.points, self.labels
                 )
@@ -335,6 +358,7 @@ class SAMNode(ConnectionBasedTransport):
                         : self.num_slots
                     ]
                 self.template_mask = self.compose_mask(self.masks)
+                self.track_trigger = True
 
 
 if __name__ == "__main__":

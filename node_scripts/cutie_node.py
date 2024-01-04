@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 import numpy as np
 import torch
 
@@ -25,7 +26,7 @@ class CutieNode(object): # should not be ConnectionBasedNode cause xmem tracker 
 
             with open_dict(cfg):
                 # TODO
-                cfg['weights'] = '/home/oh/prog/Cutie/weights/cutie-base-mega.pth'
+                cfg['weights'] = rospy.get_param("~weights")
             data_cfg = get_dataset_cfg(cfg)
 
             # Load the network weights
