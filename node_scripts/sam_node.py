@@ -11,12 +11,9 @@ from geometry_msgs.msg import PointStamped, PolygonStamped
 from std_srvs.srv import Empty, EmptyResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
-from cutie.utils.palette import davis_palette
-
-# for visualization
-color_map_np = np.frombuffer(davis_palette, dtype=np.uint8).reshape(-1, 3).copy()
-# scales for better visualization
-color_map_np = (color_map_np.astype(np.float32) * 1.5).clip(0, 255).astype(np.uint8)
+import sys
+sys.path.append("../Cutie/gui")
+from gui.interactive_utils import overlay_davis
 
 def point_drawer(image, points, labels, radius=5):
     if points == []:
@@ -36,20 +33,6 @@ def bbox_drawer(image, bbox, color=None):
         color = [0, 255, 0]
     image = cv2.rectangle(image, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3]) ), color, 2)
     return image.astype(np.uint8)
-
-def overlay_davis(image: np.ndarray, mask: np.ndarray, alpha: float = 0.5, fade: bool = False):
-    """ Overlay segmentation on top of RGB image. from davis official"""
-    im_overlay = image.copy()
-
-    colored_mask = color_map_np[mask]
-    foreground = image * alpha + (1 - alpha) * colored_mask
-    binary_mask = (mask > 0)
-    # Compose image
-    im_overlay[binary_mask] = foreground[binary_mask]
-    if fade:
-        im_overlay[~binary_mask] = im_overlay[~binary_mask] * 0.6
-    return im_overlay.astype(image.dtype)
-
 
 class SAMNode(ConnectionBasedTransport):
     def __init__(self):
@@ -334,11 +317,7 @@ class SAMNode(ConnectionBasedTransport):
     def callback(self, img_msg):
         self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
         if self.track_trigger:
-            # free memory
-            if self.predictor:
-                del self.predictor
-                del self.sam
-
+            # TODO free memory
             seg_msg = self.bridge.cv2_to_imgmsg(
                 self.template_mask.astype(np.int32), encoding="32SC1"
             )
