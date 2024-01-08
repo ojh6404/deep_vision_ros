@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
 add_custom_target(${PROJECT_NAME}_install_trained_data ALL COMMAND python$ENV{ROS_PYTHON_VERSION} ${PROJECT_SOURCE_DIR}/scripts/install_trained_data.py)
 
 
-catkin_python_setup()
 catkin_package(
   CATKIN_DEPENDS
   jsk_data
