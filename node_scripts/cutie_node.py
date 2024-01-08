@@ -2,6 +2,7 @@
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 import rospy
 from cv_bridge import CvBridge
@@ -13,10 +14,41 @@ from hydra import compose, initialize
 from cutie.model.cutie import CUTIE
 from cutie.inference.inference_core import InferenceCore
 from cutie.inference.utils.args_utils import get_dataset_cfg
+from cutie.utils.palette import davis_palette
 
-import sys
-print("running on", sys.version)
-from gui.interactive_utils import image_to_torch, torch_prob_to_numpy_mask, index_numpy_to_one_hot_torch, overlay_davis
+# for visualization
+color_map_np = np.frombuffer(davis_palette, dtype=np.uint8).reshape(-1, 3).copy()
+# scales for better visualization
+color_map_np = (color_map_np.astype(np.float32) * 1.5).clip(0, 255).astype(np.uint8)
+
+def overlay_davis(image: np.ndarray, mask: np.ndarray, alpha: float = 0.5, fade: bool = False):
+    """ Overlay segmentation on top of RGB image. from davis official"""
+    im_overlay = image.copy()
+
+    colored_mask = color_map_np[mask]
+    foreground = image * alpha + (1 - alpha) * colored_mask
+    binary_mask = (mask > 0)
+    # Compose image
+    im_overlay[binary_mask] = foreground[binary_mask]
+    if fade:
+        im_overlay[~binary_mask] = im_overlay[~binary_mask] * 0.6
+    return im_overlay.astype(image.dtype)
+
+# torch utils
+def image_to_torch(frame: np.ndarray, device: str = 'cuda'):
+    # frame: H*W*3 numpy array
+    frame = frame.transpose(2, 0, 1)
+    frame = torch.from_numpy(frame).float().to(device, non_blocking=True) / 255
+    return frame
+
+def torch_prob_to_numpy_mask(prob: torch.Tensor):
+    mask = torch.max(prob, dim=0).indices
+    mask = mask.cpu().numpy().astype(np.uint8)
+    return mask
+
+def index_numpy_to_one_hot_torch(mask: np.ndarray, num_classes: int):
+    mask = torch.from_numpy(mask).long()
+    return F.one_hot(mask, num_classes=num_classes).permute(2, 0, 1).float()
 
 
 class CutieNode(object): # should not be ConnectionBasedNode cause xmem tracker needs continuous input

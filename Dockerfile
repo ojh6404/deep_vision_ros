@@ -89,12 +89,7 @@ RUN sudo apt install -y wget
 RUN pip3 install gdown
 RUN sudo rosdep init && rosdep update && sudo apt update
 COPY --chown=user . /home/user/tracking_ws/src/tracking_ros
-RUN cd ~/tracking_ws/src/tracking_ros &&\
-    git submodule update --init --recursive &&\
-    cd Cutie &&\
-    pip3 install . &&\
-    cp -r ~/tracking_ws/src/tracking_ros/Cutie/gui ~/tracking_ws/src/tracking_ros/node_scripts &&\
-    cd ~/tracking_ws/src/tracking_ros/src &&\
+RUN cd ~/tracking_ws/src/ &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\
     wstool merge tracking_ros/rosinstall.noetic &&\
