@@ -5,7 +5,7 @@
   <arg name="num_slots" default="-1" />
 
   <!-- sam -->
-  <arg name="model_type" default="vit_h_hq" /> <!-- vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
+  <arg name="model_type" default="vit_h" /> <!-- vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
 
   <arg name="compressed" default="false"/>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>

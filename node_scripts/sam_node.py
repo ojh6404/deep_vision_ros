@@ -12,7 +12,7 @@ from std_srvs.srv import Empty, EmptyResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
 import sys
-sys.path.append("../Cutie/gui")
+sys.path.append("gui/")
 from gui.interactive_utils import overlay_davis
 
 def point_drawer(image, points, labels, radius=5):

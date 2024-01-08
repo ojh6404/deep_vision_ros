@@ -2,7 +2,6 @@
 
 import numpy as np
 import torch
-import torch.nn.functional as F
 
 import rospy
 from cv_bridge import CvBridge
@@ -16,7 +15,7 @@ from cutie.inference.inference_core import InferenceCore
 from cutie.inference.utils.args_utils import get_dataset_cfg
 
 import sys
-sys.path.append("../Cutie/gui")
+sys.path.append("gui/")
 from gui.interactive_utils import overlay_davis, image_to_torch, torch_prob_to_numpy_mask, index_numpy_to_one_hot_torch
 
 

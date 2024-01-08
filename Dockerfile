@@ -89,6 +89,7 @@ RUN sudo apt install -y wget
 RUN pip3 install gdown
 RUN sudo rosdep init && rosdep update && sudo apt update
 COPY --chown=user . /home/user/tracking_ws/src/tracking_ros
+RUN ln -sf ~/tracking_ws/src/tracking_ros/Cutie/gui ~/tracking_ws/src/tracking_ros/node_scripts/gui
 RUN cd ~/tracking_ws/src/ &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\
@@ -97,10 +98,11 @@ RUN cd ~/tracking_ws/src/ &&\
     rosdep install --from-paths . --ignore-src -y -r &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\
+    cd ~/tracking_ws/src/tracking_ros && ./prepare.sh &&\
     cd ~/tracking_ws && catkin init && catkin build
 
 # to avoid conflcit when mounting
-RUN rm -rf ~/tracking_ws/src/tracking_ros/launc
+RUN rm -rf ~/tracking_ws/src/tracking_ros/launch
 
 ########################################
 ########### ENV VARIABLE STUFF #########
