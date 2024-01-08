@@ -325,7 +325,7 @@ class SAMNode(ConnectionBasedTransport):
             )
             self.pub_segmentation_img.publish(seg_msg)
 
-            self.kill_nodes()
+            # self.kill_nodes()
         else:  # init
             if self.prompt_mode:
                 self.painted_image = self.image.copy()

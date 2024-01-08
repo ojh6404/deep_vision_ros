@@ -14,7 +14,6 @@
   <exec_depend>jsk_topic_tools</exec_depend>
   <exec_depend>jsk_perception</exec_depend>
   <exec_depend>dynamic_reconfigure</exec_depend>
-  <exec_depend>jsk_robocup_common_msgs</exec_depend>
   <exec_depend>jsk_data</exec_depend>
 
 
