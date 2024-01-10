@@ -61,12 +61,42 @@ def main():
         md5='3560f6b6a5a6edacd814a1325c39640a',
     )
 
+    # mobile sam
+    download_data(
+        pkg_name=PKG,
+        path='trained_data/sam/mobile_sam.pth',
+        url='https://github.com/hkchengrex/Tracking-Anything-with-DEVA/releases/download/v1.0/mobile_sam.pt',
+        md5='f3c0d8cda613564d499310dab6c812cd',
+    )
+
     # cutie
     download_data(
         pkg_name=PKG,
         path='trained_data/cutie/cutie-base-mega.pth',
         url='https://github.com/hkchengrex/Cutie/releases/download/v1.0/cutie-base-mega.pth',
         md5='a6071de6136982e396851903ab4c083a',
+    )
+
+    # DEVA
+    download_data(
+        pkg_name=PKG,
+        path='trained_data/deva/DEVA-propagation.pth',
+        url='https://github.com/hkchengrex/Tracking-Anything-with-DEVA/releases/download/v1.0/DEVA-propagation.pth',
+        md5='a614cc9737a5b4c22ecbdc93e7842ecb',
+    )
+
+    # grounding dino
+    download_data(
+        pkg_name=PKG,
+        path='trained_data/groundingdino/groundingdino_swint_ogc.pth',
+        url='https://github.com/IDEA-Research/GroundingDINO/releases/download/v0.1.0-alpha/groundingdino_swint_ogc.pth',
+        md5='075ebfa7242d913f38cb051fe1a128a2',
+    )
+    download_data(
+        pkg_name=PKG,
+        path='trained_data/groundingdino/GroundingDINO_SwinT_OGC.py',
+        url='https://github.com/hkchengrex/Tracking-Anything-with-DEVA/releases/download/v1.0/GroundingDINO_SwinT_OGC.py',
+        md5='bdb07fc17b611d622633d133d2cf873a',
     )
 
 if __name__ == '__main__':

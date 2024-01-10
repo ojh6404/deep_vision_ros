@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-runtime-ubuntu20.04
+FROM nvidia/cuda:12.1.0-devel-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm /etc/apt/sources.list.d/cuda.list
 
@@ -56,6 +56,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-rosinstall \
     python3-vcstools \
     python-is-python3 \
+    python3.9-* \
     && rm -rf /var/lib/apt/lists/*
 
 # install ros packages
@@ -76,9 +77,16 @@ USER user
 CMD /bin/bash
 SHELL ["/bin/bash", "-c"]
 
-RUN sudo apt install python3-pip -y && pip3 install -U pip
-RUN pip3 install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+# RUN sudo apt install python3-pip -y && python3.9 -m pip install -U pip setuptools
+RUN sudo apt install python3-pip -y
+RUN python3.9 -m pip install torch==2.1.1 torchvision==0.16.1 torchaudio==2.1.1 --index-url https://download.pytorch.org/whl/cu121
+RUN python3.9 -m pip install -U numpy
 
+ENV AM_I_DOCKER=True
+ENV BUILD_WITH_CUDA=True
+ENV CUDA_HOME=/usr/local/cuda/
+# trick for cuda because cuda is not available when building docker image
+ENV FORCE_CUDA="1" TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
 
 ########################################
 ########### WORKSPACE BUILD ############
@@ -89,7 +97,7 @@ RUN sudo apt install -y wget
 RUN pip3 install gdown
 RUN sudo rosdep init && rosdep update && sudo apt update
 COPY --chown=user . /home/user/tracking_ws/src/tracking_ros
-RUN ln -sf ~/tracking_ws/src/tracking_ros/Cutie/gui ~/tracking_ws/src/tracking_ros/node_scripts/gui
+# RUN ln -sf ~/tracking_ws/src/tracking_ros/Cutie/gui ~/tracking_ws/src/tracking_ros/node_scripts/gui
 RUN cd ~/tracking_ws/src/ &&\
     source /opt/ros/noetic/setup.bash &&\
     wstool init &&\

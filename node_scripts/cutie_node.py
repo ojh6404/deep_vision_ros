@@ -14,12 +14,10 @@ from cutie.model.cutie import CUTIE
 from cutie.inference.inference_core import InferenceCore
 from cutie.inference.utils.args_utils import get_dataset_cfg
 
-import sys
-sys.path.append("gui/")
 from gui.interactive_utils import overlay_davis, image_to_torch, torch_prob_to_numpy_mask, index_numpy_to_one_hot_torch
 
 
-class CutieNode(object): # should not be ConnectionBasedNode cause xmem tracker needs continuous input
+class CutieNode(object): # should not be ConnectionBasedNode cause Cutie tracker needs continuous input
     def __init__(self):
         super(CutieNode, self).__init__()
         self.device = rospy.get_param("~device", "cuda:0")
