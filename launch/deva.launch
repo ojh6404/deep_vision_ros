@@ -1,0 +1,30 @@
+<launch>
+  <arg name="ns" default="tracking_ros" />
+  <arg name="device" default="cuda:0" />
+  <arg name="num_slots" default="-1" />
+
+  <!-- sam -->
+  <arg name="sam_model_type" default="vit_t" /> <!-- vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
+
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="segmentation_image" default="/$(arg ns)/segmentation_image" />
+  <arg name="output_segmentation" default="/$(arg ns)/segmentation" />
+
+
+  <group ns="$(arg ns)">
+    <!-- deva node -->
+    <node name="deva_node"
+          pkg="tracking_ros" type="deva_node.py"
+          output="screen" >
+        <remap from="~input_image" to="$(arg input_image)" />
+        <remap from="~output_image" to="$(arg segmentation_image)" />
+        <remap from="~segmentation" to="$(arg output_segmentation)" />
+        <rosparam subst_value="true" >
+            device: $(arg device)
+            weights: $(find tracking_ros)/trained_data/cutie/cutie-base-mega.pth
+            classes: ['monitor', 'cup', 'book', 'keyboard']
+        </rosparam>
+    </node>
+
+  </group>
+</launch>

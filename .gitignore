@@ -3,6 +3,7 @@
 *.log
 .vscode
 tmp/
+trained_data
 
 *.pth
 *.pyc
