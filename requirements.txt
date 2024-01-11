@@ -1,12 +1,12 @@
 setuptools>=65.0.0
 numpy>=1.24.1
+matplotlib==3.8.2
 gdown
 gitpython
 hickle
 tensorboard
 gradio
 opencv-python
-matplotlib
 pyyaml
 av
 openmim
