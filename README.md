@@ -68,7 +68,7 @@ where
 - `-host` : hostname like `pr1040` or `localhost`
 - `-mount` : mount launch file directory for launch inside docker.
 - `-name` : launch file name to run
-[detic_ros](https://github.com/HiroIshida/detic_ros.git)
+
 and launch rqt gui on your gui machine by
 ```bash
 roslaunch tracking_ros sam_gui.launch
