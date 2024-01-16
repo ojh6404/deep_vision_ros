@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>tracking_ros</name>
+  <version>0.0.1</version>
+  <description>Tracking ROS package</description>
+
+  <maintainer email="oh@jsk.imi.i.u-tokyo.ac.jp">Jihoon Oh</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>python3-catkin-pkg-modules</buildtool_depend>.
+  <build_depend>catkin_virtualenv</build_depend>
+  <build_depend>jsk_data</build_depend>
+
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>jsk_recognition_msgs</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
+  <exec_depend>jsk_topic_tools</exec_depend>
+  <exec_depend>jsk_perception</exec_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
+  <exec_depend>jsk_data</exec_depend>
+  <exec_depend>cv_bridge</exec_depend>
+
+  <test_depend>rostest</test_depend>
+  <test_depend>image_publisher</test_depend>
+
+
+  <export>
+    <pip_requirements>requirements.txt</pip_requirements>
+  </export>
+</package>

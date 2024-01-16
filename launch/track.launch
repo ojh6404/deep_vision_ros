@@ -1,0 +1,37 @@
+<launch>
+  <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
+  <arg name="with_bbox" default="true" /> <!-- false if faster, but for visualization -->
+  <arg name="model_type" default="vit_t" /> <!-- SAM model : vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
+  <arg name="mode" default="prompt" /> <!-- SAM mode : prompt, automatic -->
+  <arg name="num_slots" default="10" /> <!-- max num of mask generation when automatic mode -->
+
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="sam_output" default="/sam_node/output" />
+
+  <!-- sam node -->
+  <node name="sam_node"
+          pkg="tracking_ros" type="sam_node.py"
+          output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <remap from="~input_point" to="$(arg sam_output)/segmentation_image/screenpoint" />
+    <remap from="~input_bbox" to="$(arg sam_output)/segmentation_image/screenrectangle" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+        model_type: $(arg model_type)
+        mode: $(arg mode)
+        num_slots: $(arg num_slots)
+    </rosparam>
+  </node>
+
+  <!-- cutie node -->
+  <node name="cutie_node"
+        pkg="tracking_ros" type="cutie_node.py"
+        output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <remap from="~input_segmentation" to="$(arg sam_output)/segmentation" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+        with_bbox: $(arg with_bbox)
+    </rosparam>
+  </node>
+</launch>

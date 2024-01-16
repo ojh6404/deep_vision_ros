@@ -1,0 +1,33 @@
+name: formatter, checker and setup test for python
+
+on:
+    push:
+        branches:
+            - master
+    pull_request:
+        branches:
+            - master
+
+jobs:
+  peripheral:
+    runs-on: ubuntu-20.04
+    steps:
+        - name: Checkout Code
+          uses: actions/checkout@v2
+        - name: pip install formatters and checkers
+          run: |
+              pip3 install mypy isort black pyproject-flake8
+        - name: pip install torch and numpy for module build
+          run: |
+              pip3 install numpy>=1.24 torch>=2.0
+
+        - name: check by mypy
+          run: |
+              pip3 install -r requirements.txt
+              mypy --version
+              mypy .
+
+        - name: reformat and check
+          run: |
+              python3 -m black .
+              python3 -m pflake8 node_scripts/ scripts/ test/

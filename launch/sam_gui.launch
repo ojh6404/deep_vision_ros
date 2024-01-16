@@ -1,0 +1,20 @@
+<launch>
+  <arg name="prompt_image" default="/sam_node/output/segmentation_image"/>
+  <arg name="track_image" default="/cutie_node/output/segmentation_image"/>
+  <node name="sam_prompt_view" pkg="image_view2" type="image_view2" output="screen" >
+    <remap from="image" to="$(arg prompt_image)" />
+    <param name="use_window" value="false" />
+  </node>
+  <node  pkg="jsk_rqt_plugins" type="rqt_image_view2" name="prompter"
+        output="screen">
+    <remap from="event" to="image_view2/event" />
+    <remap from="image_marked" to="image_marked" />
+  </node>
+  <node name="prompter_button"
+        pkg="jsk_rqt_plugins" type="rqt_tabbed_buttons" output="screen" clear_params="true">
+    <rosparam command="load" file="$(find tracking_ros)/resource/remote_tabbed_layout.yaml" />
+  </node>
+  <node name="cutie_output_view" pkg="image_view2" type="image_view2" output="screen" >
+    <remap from="image" to="$(arg track_image)" />
+  </node>
+</launch>
