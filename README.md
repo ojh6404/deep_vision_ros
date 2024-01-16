@@ -7,11 +7,12 @@ Tested : image of 480X640 30hz, 3090ti
 ### Interactive prompt for generating mask and tracking object using SAM and Cutie.
 https://github.com/ojh6404/tracking_ros/assets/54985442/f8a49814-2645-4b71-887e-1c8f02da5c38
 
-It runs almost real-time (~30hz).
+sam_node publishes segmentation prompt which is used by cutie_node to track objects. It runs almost real-time (~30hz).
 ### Detecting and tracking object using SAM, GroundingDINO and DEVA.
 https://github.com/ojh6404/tracking_ros/assets/54985442/f55e8850-a7bc-41fc-b398-1c7dda47c66d
 
-It runs ~15hz.
+deva_ndoe queries objects GroundingDINO and SAM at some intervals, so it can track new object after tracking is started. It runs ~15hz and you can adjust `cfg['detection_every']` for performance.
+See [`node_scripts/model_config.py`](node_scripts/model_config.py)
 
 ## Setup
 
@@ -55,7 +56,7 @@ roslaunch tracking_ros sample_track.launch \
     device:=cuda:0
 ```
 #### 2. using docker
-You need launch tracker and gui seperately cause docker doesn't have gui, so launch tracker by
+You need to launch tracker and gui seperately cause docker doesn't have gui, so launch tracker by
 ```bash
 ./run_docker -host pr1040 -mount ./launch -name track.launch \
     input_image:=/kinect_head/rgb/image_rect_color \
@@ -67,6 +68,7 @@ where
 - `-host` : hostname like `pr1040` or `localhost`
 - `-mount` : mount launch file directory for launch inside docker.
 - `-name` : launch file name to run
+
 and launch rqt gui on your gui machine by
 ```bash
 roslaunch tracking_ros sam_gui.launch
