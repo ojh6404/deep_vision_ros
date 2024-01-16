@@ -31,7 +31,7 @@ git clone https://github.com/ojh404/tracking_ros.git
 wstool init
 wstool merge -t . tracking_ros/rosinstall.noetic
 wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
-tracking_ros/prepare.sh # pre-install python3.9 and pytorch
+cd tracking_ros && ./prepare.sh
 cd ~/ros/catkin_ws && catkin b
 ```
 
