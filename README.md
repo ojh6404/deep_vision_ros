@@ -68,7 +68,7 @@ where
 - `-host` : hostname like `pr1040` or `localhost`
 - `-mount` : mount launch file directory for launch inside docker.
 - `-name` : launch file name to run
-
+[detic_ros](https://github.com/HiroIshida/detic_ros.git)
 and launch rqt gui on your gui machine by
 ```bash
 roslaunch tracking_ros sam_gui.launch
@@ -92,4 +92,5 @@ or
 ```
 
 ### TODO
-add rostest and docker build test.
+- add rostest and docker build test
+- add [CoTracker](https://github.com/facebookresearch/co-tracker.git) and [Track Any Point](https://github.com/google-deepmind/tapnet.git).
