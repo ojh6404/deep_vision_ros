@@ -27,7 +27,7 @@ This package is build upon
 If you want build this package directly on your workspace, please be aware of python environment dependencies (python3.9 and pytorch is needed to build package).
 ```bash
 mkdir -p ~/ros/catkin_ws/src && cd ~/ros/catkin_ws/src
-git clone https://github.com/ojh404/tracking_ros.git
+git clone https://github.com/ojh6404/tracking_ros.git
 wstool init
 wstool merge -t . tracking_ros/rosinstall.noetic
 wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
@@ -38,7 +38,7 @@ cd ~/ros/catkin_ws && catkin b
 #### using docker (Recommended)
 Otherwise, you can build this package on docker environment.
 ```bash
-git clone https://github.com/ojh404/tracking_ros.git
+git clone https://github.com/ojh6404/tracking_ros.git
 cd tracking_ros
 docker build -t tracking_ros .
 ```
