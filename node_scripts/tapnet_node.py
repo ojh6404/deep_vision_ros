@@ -69,10 +69,10 @@ class TAPNetNode(object):  # should not be ConnectionBasedNode cause tapnet trac
         self.with_bbox = rospy.get_param("~with_bbox", False)
 
         self.bridge = CvBridge()
-        self.initialize()
-
         self.pub_vis_img = rospy.Publisher("~output/debug_image", Image, queue_size=1)
         self.pub_point = rospy.Publisher("~output/point", Point2DArrayStamped, queue_size=1)
+        self.initialize()
+
         self.sub_image = rospy.Subscriber(
             "~input_image",
             Image,
@@ -111,6 +111,7 @@ class TAPNetNode(object):  # should not be ConnectionBasedNode cause tapnet trac
         # NOTE Call one time to compile
         input_img_msg = rospy.wait_for_message("~input_image", Image)
         self.image = self.bridge.imgmsg_to_cv2(input_img_msg, desired_encoding="bgr8")
+        self.publish_result(None, self.image, input_img_msg.header.frame_id) # just debug view for prompt image
         rospy.loginfo("Compiling jax functions (this may take a while...)")
         self.query_points = jnp.zeros([NUM_POINTS, 3], dtype=jnp.float32)
         self.query_features, _ = self.online_init_apply(
