@@ -42,6 +42,14 @@ if __name__ == "__main__":
         assert bool(re.match(r".*:=.*", launch_arg))
     launch_args = " ".join(args.launch_args)
 
+    use_gpu = True  # default
+    for launch_arg in args.launch_args:
+        if "device:=" not in launch_arg:
+            continue
+        device = launch_arg.split(":=")[1]
+        if device == "cpu":
+            use_gpu = False
+
     with TemporaryDirectory() as td:
         tmp_launch_path = Path(td) / "launch"
 
@@ -54,7 +62,8 @@ if __name__ == "__main__":
             docker run \
                 -v {tmp_launch_path}:{tracking_ros_root}/launch \
                 --rm --net=host -it \
-                --gpus 1 tracking_ros:latest \
+                {gpu_arg} \
+                tracking_ros:latest \
                 /bin/bash -i -c \
                 "source ~/.bashrc; \
                 roscd tracking_ros; \
@@ -63,6 +72,7 @@ if __name__ == "__main__":
                 """.format(
             tmp_launch_path=tmp_launch_path,
             tracking_ros_root=_TRACKING_ROS_ROOT_INSIDE_CONTAINER,
+            gpu_arg="--gpus 1" if use_gpu else "",
             host=args.host,
             launch_file_name=launch_file_name,
             launch_args=launch_args,
