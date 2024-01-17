@@ -1,0 +1,21 @@
+<launch>
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="prompt_image" default="/tapnet_node/output/debug_image"/>
+  <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
+
+  <!-- tapnet node -->
+  <node name="tapnet_node"
+          pkg="tracking_ros" type="tapnet_node.py"
+          output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <remap from="~input_point" to="$(arg prompt_image)/screenpoint" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+    </rosparam>
+  </node>
+  <!-- interactive prompter -->
+  <include file="$(find tracking_ros)/launch/tapnet_gui.launch">
+    <arg name="prompt_image" value="$(arg prompt_image)"/>
+  </include>
+
+</launch>
