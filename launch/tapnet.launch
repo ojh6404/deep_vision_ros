@@ -13,9 +13,4 @@
         device: $(arg device)
     </rosparam>
   </node>
-  <!-- interactive prompter -->
-  <include file="$(find tracking_ros)/launch/tapnet_gui.launch">
-    <arg name="prompt_image" value="$(arg prompt_image)"/>
-  </include>
-
 </launch>
