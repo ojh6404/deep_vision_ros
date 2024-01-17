@@ -1,3 +1,6 @@
 [submodule "Cutie"]
 	path = Cutie
 	url = https://github.com/hkchengrex/Cutie.git
+[submodule "tapnet"]
+	path = tapnet
+	url = https://github.com/google-deepmind/tapnet.git
