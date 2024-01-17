@@ -28,3 +28,13 @@ git+https://github.com/facebookresearch/segment-anything.git
 git+https://github.com/hkchengrex/Cutie.git
 git+https://github.com/hkchengrex/Grounded-Segment-Anything.git#egg=groundingdino&subdirectory=GroundingDINO
 git+https://github.com/hkchengrex/Tracking-Anything-with-DEVA.git
+chex
+jax[cuda12_pip] -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+jaxline
+optax
+dm-haiku
+dm-tree
+typing_extensions
+mediapy
+einshape
+ipympl
