@@ -4,10 +4,7 @@ import os
 import functools
 import rospy
 import rospkg
-import torch
 import numpy as np
-import haiku as hk
-import jax
 
 CKECKPOINT_ROOT = os.path.join(rospkg.RosPack().get_path("tracking_ros"), "trained_data")
 
@@ -92,6 +89,7 @@ class CutieConfig(ROSInferenceModelConfig):
     model_checkpoint = os.path.join(CKECKPOINT_ROOT, "cutie/cutie-base-mega.pth")
 
     def get_predictor(self):
+        import torch
         from omegaconf import open_dict
         from hydra import compose, initialize
 
@@ -133,6 +131,8 @@ class DEVAConfig(ROSInferenceModelConfig):
 
     def get_predictor(self):
         from argparse import ArgumentParser
+        import torch
+
         from deva.model.network import DEVA
         from deva.inference.inference_core import DEVAInferenceCore
         from deva.inference.eval_args import add_common_eval_args
@@ -219,7 +219,10 @@ class TAPNetConfig(ROSInferenceModelConfig):
     def get_predictor(self):
         # NOTE we should append tapnet to python path cause it's not a package based system though it is not clean
         import sys
+
         sys.path.insert(0, rospkg.RosPack().get_path("tracking_ros"))
+        import jax
+        import haiku as hk
         from tapnet import tapir_model
 
         def load_checkpoint(checkpoint_path):

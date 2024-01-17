@@ -18,10 +18,12 @@ from model_config import TAPNetConfig
 # NOTE we should append tapnet to python path cause it's not a package based system though it is not clean
 import sys
 import rospkg
+
 sys.path.insert(0, rospkg.RosPack().get_path("tracking_ros"))
 from tapnet import tapir_model
 from tapnet.utils import model_utils
 
+print("running backend :", jax.lib.xla_bridge.get_backend().platform)
 
 # TODO move to config and make it configurable
 NUM_POINTS = 8
@@ -182,7 +184,7 @@ class TAPNetNode(object):  # should not be ConnectionBasedNode cause tapnet trac
                     if self.track[i, 0] < 16 and self.track[i, 1] < 16:
                         rospy.loginfo((i, self.next_query_idx))
         self.visualization = self.image.copy()[:, ::-1]
-        self.publish_result(None, self.visualization, img_msg.header.frame_id) # TODO publish tracking points
+        self.publish_result(None, self.visualization, img_msg.header.frame_id)  # TODO publish tracking points
 
 
 if __name__ == "__main__":
