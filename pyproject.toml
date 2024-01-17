@@ -1,5 +1,5 @@
 [tool.flake8]
-exclude = "Cutie"
+exclude = ["Cutie", "tapnet"]
 ignore = "H,E501,W503,F841,F401"
 
 [tool.isort] # not used for now
@@ -13,7 +13,7 @@ exclude = "Cutie"
 
 [tool.mypy]
 python_version = 3.9
-exclude = "Cutie"
+exclude = ["Cutie", "tapnet"]
 show_error_codes = true
 warn_unused_ignores = false
 check_untyped_defs = true
@@ -40,7 +40,12 @@ module = [
        "GroundingDINO.*",
        "segment_anything",
        "segment_anything_hq",
-       "mobile_sam"
+       "mobile_sam",
+       "ml_collections",
+       "jaxline",
+       "absl",
+       "ffmpeg",
+       "PIL",
+       "cv2"
 ]
 ignore_missing_imports = true
-

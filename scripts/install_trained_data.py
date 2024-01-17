@@ -97,6 +97,14 @@ def main():
         md5="bdb07fc17b611d622633d133d2cf873a",
     )
 
+    # tapnet
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/tapnet/causal_tapir_checkpoint.npy",
+        url="https://storage.googleapis.com/dm-tapnet/causal_tapir_checkpoint.npy",
+        md5="763a9dbdf9e077395217aaddc6c6f048",
+    )
+
 
 if __name__ == "__main__":
     main()

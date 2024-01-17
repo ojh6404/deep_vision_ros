@@ -4,6 +4,7 @@ project(tracking_ros)
 find_package(catkin REQUIRED COMPONENTS
   catkin_virtualenv
   sensor_msgs
+  opencv_apps
   jsk_data
   dynamic_reconfigure
 )

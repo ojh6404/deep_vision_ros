@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import os
+import functools
 import rospy
 import rospkg
 import torch
+import numpy as np
+import haiku as hk
+import jax
 
 CKECKPOINT_ROOT = os.path.join(rospkg.RosPack().get_path("tracking_ros"), "trained_data")
 
@@ -202,6 +206,70 @@ class GroundingDINOConfig(ROSInferenceModelConfig):
     @classmethod
     def from_args(cls, device: str = "cuda:0"):
         return cls(model_name="GroundingDINO", device=device)
+
+    @classmethod
+    def from_rosparam(cls):
+        return cls.from_args(rospy.get_param("~device", "cuda:0"))
+
+
+@dataclass
+class TAPNetConfig(ROSInferenceModelConfig):
+    model_checkpoint = os.path.join(CKECKPOINT_ROOT, "tapnet/causal_tapir_checkpoint.npy")
+
+    def get_predictor(self):
+        # NOTE we should append tapnet to python path cause it's not a package based system though it is not clean
+        import sys
+        sys.path.insert(0, rospkg.RosPack().get_path("tracking_ros"))
+        from tapnet import tapir_model
+
+        def load_checkpoint(checkpoint_path):
+            ckpt_state = np.load(checkpoint_path, allow_pickle=True).item()
+            return ckpt_state["params"], ckpt_state["state"]
+
+        def build_online_model_init(frames, points):
+            model = tapir_model.TAPIR(use_causal_conv=True, bilinear_interp_with_depthwise_conv=False)
+            feature_grids = model.get_feature_grids(frames, is_training=False)
+            features = model.get_query_features(
+                frames,
+                is_training=False,
+                query_points=points,
+                feature_grids=feature_grids,
+            )
+            return features
+
+        def build_online_model_predict(frames, features, causal_context):
+            """Compute point tracks and occlusions given frames and query points."""
+            model = tapir_model.TAPIR(use_causal_conv=True, bilinear_interp_with_depthwise_conv=False)
+            feature_grids = model.get_feature_grids(frames, is_training=False)
+            trajectories = model.estimate_trajectories(
+                frames.shape[-3:-1],
+                is_training=False,
+                feature_grids=feature_grids,
+                query_features=features,
+                query_points_in_video=None,
+                query_chunk_size=64,
+                causal_context=causal_context,
+                get_causal_context=True,
+            )
+            causal_context = trajectories["causal_context"]
+            del trajectories["causal_context"]
+            return {k: v[-1] for k, v in trajectories.items()}, causal_context
+
+        params, state = load_checkpoint(self.model_checkpoint)
+
+        # jax setup
+        online_init = hk.transform_with_state(build_online_model_init)
+        online_init_apply = jax.jit(online_init.apply)
+        online_predict = hk.transform_with_state(build_online_model_predict)
+        online_predict_apply = jax.jit(online_predict.apply)
+        rng = jax.random.PRNGKey(42)  # TODO: make it configurable or dont use it
+        online_init_apply = functools.partial(online_init_apply, params=params, state=state, rng=rng)
+        online_predict_apply = functools.partial(online_predict_apply, params=params, state=state, rng=rng)
+        return online_init_apply, online_predict_apply
+
+    @classmethod
+    def from_args(cls, device: str = "cuda:0"):
+        return cls(model_name="TAPNet", device=device)
 
     @classmethod
     def from_rosparam(cls):
