@@ -30,9 +30,9 @@ If you want build this package directly on your workspace, please be aware of py
 mkdir -p ~/ros/catkin_ws/src && cd ~/ros/catkin_ws/src
 git clone https://github.com/ojh6404/tracking_ros.git
 wstool init
-wstool merge -t . tracking_ros/rosinstall.noetic
+wstool merge -t . tracking_ros/tracking_ros/rosinstall.noetic
 wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
-cd tracking_ros && ./prepare.sh
+cd tracking_ros/tracking_ros && ./prepare.sh
 cd ~/ros/catkin_ws && catkin b
 ```
 
@@ -40,7 +40,7 @@ cd ~/ros/catkin_ws && catkin b
 Otherwise, you can build this package on docker environment.
 ```bash
 git clone https://github.com/ojh6404/tracking_ros.git
-cd tracking_ros
+cd tracking_ros/tracking_ros
 docker build -t tracking_ros .
 ```
 

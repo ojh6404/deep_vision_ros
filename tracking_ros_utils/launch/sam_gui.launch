@@ -12,7 +12,7 @@
   </node>
   <node name="prompter_button"
         pkg="jsk_rqt_plugins" type="rqt_tabbed_buttons" output="screen" clear_params="true">
-    <rosparam command="load" file="$(find tracking_ros)/resource/remote_tabbed_layout.yaml" />
+    <rosparam command="load" file="$(find tracking_ros_utils)/resource/remote_tabbed_layout.yaml" />
   </node>
   <node name="cutie_output_view" pkg="image_view2" type="image_view2" output="screen" >
     <remap from="image" to="$(arg track_image)" />
