@@ -43,15 +43,14 @@ git clone https://github.com/ojh6404/tracking_ros.git
 cd tracking_ros/tracking_ros
 docker build -t tracking_ros .
 ```
-Build only trackin_ros_utils containing gui
+Build only `tracking_ros_utils` for using intractive prompt gui
 ```
 mkdir -p ~/ros/catkin_ws/src && cd ~/ros/catkin_ws/src
 git clone https://github.com/Kanazawanaoaki/tracking_ros.git -b divide-model-and-gui-pkg
 wstool init
 wstool merge -t . tracking_ros/tracking_ros/rosinstall.noetic
 wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
-cd tracking_ros/tracking_ros && ./prepare.sh
-cd ~/ros/catkin_ws/src/tracking_ros/tracking_ros_utils && catkin bt # or catkin b tracking_ros_utils
+cd ~/ros/catkin_ws && catkin b tracking_ros_utils
 ```
 
 ## How to use
@@ -81,7 +80,7 @@ where
 
 and launch rqt gui on your gui machine by
 ```bash
-roslaunch tracking_ros sam_gui.launch
+roslaunch tracking_ros_utils sam_gui.launch
 ```
 
 ### Detecting and tracking object.
