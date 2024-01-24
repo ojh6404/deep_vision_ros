@@ -23,11 +23,13 @@ jobs:
 
         - name: check by mypy
           run: |
+              cd tracking_ros
               pip3 install -r requirements.txt
               mypy --version
               mypy .
 
         - name: reformat and check
           run: |
+              cd tracking_ros
               python3 -m black .
               python3 -m pflake8 node_scripts/ scripts/ test/
