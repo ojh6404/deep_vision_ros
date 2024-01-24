@@ -1,3 +1,3 @@
-[submodule "Cutie"]
-	path = Cutie
+[submodule "tracking_ros/Cutie"]
+	path = tracking_ros/Cutie
 	url = https://github.com/hkchengrex/Cutie.git
