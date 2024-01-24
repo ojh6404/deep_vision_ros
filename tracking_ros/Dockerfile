@@ -84,6 +84,8 @@ ENV BUILD_WITH_CUDA=True
 ENV CUDA_HOME=/usr/local/cuda/
 # trick for cuda because cuda is not available when building docker image
 ENV FORCE_CUDA="1" TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
+# to use gdown, you need to add path to ~/.local/bin
+ENV PATH="$PATH:$HOME/.local/bin"
 
 ########################################
 ########### WORKSPACE BUILD ############
@@ -95,11 +97,6 @@ RUN pip3 install gdown
 RUN sudo rosdep init && rosdep update && sudo apt update
 COPY --chown=user . /home/user/tracking_ws/src/tracking_ros
 RUN cd ~/tracking_ws/src/ &&\
-    source /opt/ros/noetic/setup.bash &&\
-    wstool init &&\
-    wstool merge tracking_ros/rosinstall.noetic &&\
-    wstool update &&\
-    rosdep install --from-paths . --ignore-src -y -r &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\
     cd ~/tracking_ws/src/tracking_ros && ./prepare.sh &&\
