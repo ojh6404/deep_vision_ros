@@ -108,10 +108,11 @@ class CutieConfig(ROSInferenceModelConfig):
             data_cfg = get_dataset_cfg(cfg)
 
             cutie = CUTIE(cfg).to(self.device).eval()
-            model_weights = torch.load(cfg.weights)
+            model_weights = torch.load(cfg.weights, map_location=self.device)
             cutie.load_weights(model_weights)
 
-        torch.cuda.empty_cache()
+        if self.device.startswith("cuda"):
+            torch.cuda.empty_cache()
         return InferenceCore(cutie, cfg=cfg)
 
     @classmethod
@@ -150,7 +151,7 @@ class DEVAConfig(ROSInferenceModelConfig):
         # Load our checkpoint
         deva_model = DEVA(cfg).to(self.device).eval()
         if args.model is not None:
-            model_weights = torch.load(args.model)
+            model_weights = torch.load(args.model, map_location=self.device)
             deva_model.load_weights(model_weights)
         else:
             print("No model loaded.")
