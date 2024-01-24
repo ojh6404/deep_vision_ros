@@ -41,7 +41,7 @@ Otherwise, you can build this package on docker environment.
 ```bash
 git clone https://github.com/ojh6404/tracking_ros.git
 cd tracking_ros/tracking_ros
-docker build -t tracking_ros .
+docker build --build-arg CUDA_VERSION=11.3 -t tracking_ros . # default is 11.3, you can also build with 12.1
 ```
 Build only `tracking_ros_utils` for using intractive prompt gui
 ```
