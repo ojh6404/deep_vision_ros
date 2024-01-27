@@ -1,6 +1,11 @@
 #!/usr/bin/bash
 
-git submodule update --init --recursive
+# if AM_I_DOCKER is True, git clone Cutie repo. else, git submodule update --init --recursive
+if [ "$AM_I_DOCKER" == "True" ]; then
+    git clone https://github.com/hkchengrex/Cutie.git
+else
+    git submodule update --init --recursive
+fi
 sudo apt install -y python3.9 python3.9-dev python3.9-venv
 python3.9 -m pip install -U numpy
 if [ "$CUDA_VERSION" == "12.1.1" ]; then
