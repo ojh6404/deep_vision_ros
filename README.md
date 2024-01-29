@@ -37,20 +37,20 @@ cd ~/ros/catkin_ws && catkin b
 ```
 
 #### using docker (Recommended)
-Otherwise, you can build this package on docker environment.
+Otherwise, you can build only `tracking_ros_utils` package for using intractive prompt gui
 ```bash
-git clone https://github.com/ojh6404/tracking_ros.git
-cd tracking_ros/tracking_ros
-docker build --build-arg CUDA_VERSION=11.3 -t tracking_ros . # default is 11.3, you can also build with 12.1
-```
-Build only `tracking_ros_utils` for using intractive prompt gui
-```
 mkdir -p ~/ros/catkin_ws/src && cd ~/ros/catkin_ws/src
-git clone https://github.com/Kanazawanaoaki/tracking_ros.git -b divide-model-and-gui-pkg
+git clone https://github.com/ojh6404/tracking_ros.git
 wstool init
 wstool merge -t . tracking_ros/tracking_ros/rosinstall.noetic
 wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
 cd ~/ros/catkin_ws && catkin b tracking_ros_utils
+```
+and build whole package on docker environment.
+```bash
+source ~/ros/catkin_ws/devel/setup.bash
+roscd tracking_ros_utils/../tracking_ros
+docker build --build-arg CUDA_VERSION=11.3 -t tracking_ros . # default is 11.3, you can also build with 12.1
 ```
 
 ## How to use
