@@ -35,7 +35,7 @@
   </node>
 
   <!-- interactive prompter -->
-  <include file="$(find tracking_ros)/launch/sam_gui.launch" if="$(eval mode=='prompt')">
+  <include file="$(find tracking_ros_utils)/launch/sam_gui.launch" if="$(eval mode=='prompt')">
     <arg name="prompt_image" value="$(arg sam_output)/segmentation_image"/>
     <arg name="track_image" value="/cutie_node/output/segmentation_image"/>
   </include>
