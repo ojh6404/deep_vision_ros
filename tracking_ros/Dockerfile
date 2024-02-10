@@ -98,7 +98,6 @@ RUN cd ~/tracking_ws/src/ &&\
     rosdep install --from-paths . -i -r -y &&\
     cd ~/tracking_ws/src/tracking_ros && ./prepare.sh &&\
     cd ~/tracking_ws && catkin init && catkin build &&\
-    rm -rf /var/lib/apt/lists/* &&\
     rm -rf ~/.cache/pip
 
 # to avoid conflcit when mounting
