@@ -8,19 +8,14 @@ from tempfile import TemporaryDirectory
 from typing import Optional
 
 _TRACKING_ROS_ROOT_INSIDE_CONTAINER = "/home/user/tracking_ws/src/tracking_ros"
-
-
-def add_prefix(file_path: Path, prefix: str) -> Path:
-    parent = file_path.parent
-    return parent / (prefix + file_path.name)
-
+_TORCH_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/torch"
+_TORCH_CACHE_DIR = Path.home() / ".cache" / "torch"
+_HF_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/huggingface"
+_HF_CACHE_DIR = Path.home() / ".cache" / "huggingface"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-mount", type=str, help="mount source launch file or directory"
-    )
-    parser.add_argument("-name", type=str, help="launch file name")
+    parser.add_argument("-launch", type=str, help="launch file name")
     parser.add_argument(
         "-host", type=str, default="pr1040", help="host name or ip-address"
     )
@@ -31,11 +26,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    mount_path_str: Optional[str] = args.mount
+    mount_path_str: Optional[str] = Path(__file__).resolve().parent / "launch"
     assert mount_path_str is not None
     mount_path = Path(mount_path_str)
 
-    launch_file_name: Optional[str] = args.name
+    launch_file_name: Optional[str] = args.launch
     assert launch_file_name is not None
 
     for launch_arg in args.launch_args:
@@ -52,15 +47,16 @@ if __name__ == "__main__":
 
     with TemporaryDirectory() as td:
         tmp_launch_path = Path(td) / "launch"
-
         if mount_path.is_dir():
             shutil.copytree(mount_path, tmp_launch_path)
         else:
             shutil.copyfile(mount_path, tmp_launch_path)
-
         docker_run_command = """
             docker run \
+                -v {node_scripts_dir}:{tracking_ros_root}/node_scripts \
                 -v {tmp_launch_path}:{tracking_ros_root}/launch \
+                -v {torch_cache_dir}:{torch_cache_dir_inside_container} \
+                -v {hf_cache_dir}:{hf_cache_dir_inside_container} \
                 --rm --net=host -it \
                 {gpu_arg} \
                 tracking_ros:latest \
@@ -70,8 +66,13 @@ if __name__ == "__main__":
                 rossetip; rossetmaster {host}; \
                 roslaunch tracking_ros {launch_file_name} {launch_args}"
                 """.format(
+            node_scripts_dir=Path(__file__).resolve().parent / "node_scripts",
             tmp_launch_path=tmp_launch_path,
             tracking_ros_root=_TRACKING_ROS_ROOT_INSIDE_CONTAINER,
+            torch_cache_dir=_TORCH_CACHE_DIR,
+            torch_cache_dir_inside_container=_TORCH_CACHE_DIR_INSIDE_CONTAINER,
+            hf_cache_dir=_HF_CACHE_DIR,
+            hf_cache_dir_inside_container=_HF_CACHE_DIR_INSIDE_CONTAINER,
             gpu_arg="--gpus 1" if use_gpu else "",
             host=args.host,
             launch_file_name=launch_file_name,
