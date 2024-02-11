@@ -1,18 +1,18 @@
 - name: "Toggle label"
-  service: "/tracking_ros/sam_controller/toggle_label"
+  service: "/sam_node/sam_controller/toggle_label"
   column: 0
 - name: "Clear prompt"
-  service: "/tracking_ros/sam_controller/clear_prompt"
+  service: "/sam_node/sam_controller/clear_prompt"
   column: 1
 - name: "Reset"
-  service: "/tracking_ros/sam_controller/reset"
+  service: "/sam_node/sam_controller/reset"
   column: 2
 - name: "Add mask"
-  service: "/tracking_ros/sam_controller/add_mask"
+  service: "/sam_node/sam_controller/add_mask"
   column: 3
 - name: "Set embedding image"
-  service: "/tracking_ros/sam_controller/reset_embed"
+  service: "/sam_node/sam_controller/reset_embed"
   column: 4
 - name: "Publish mask"
-  service: "/tracking_ros/sam_controller/publish_mask"
+  service: "/sam_node/sam_controller/publish_mask"
   column: 5

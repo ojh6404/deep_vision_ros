@@ -22,31 +22,31 @@ class SAMNode(ConnectionBasedTransport):
 
         if self.sam_config.mode == "prompt":  # prompt mode
             self.toggle_prompt_label_service = rospy.Service(
-                "/tracking_ros/sam_controller/toggle_label",
+                "/sam_node/sam_controller/toggle_label",
                 Empty,
                 self.toggle_prompt_label_callback,
             )
             self.clear_prompt_service = rospy.Service(
-                "/tracking_ros/sam_controller/clear_prompt",
+                "/sam_node/sam_controller/clear_prompt",
                 Empty,
                 self.clear_prompt_callback,
             )
             self.reset_service = rospy.Service(
-                "/tracking_ros/sam_controller/reset",
+                "/sam_node/sam_controller/reset",
                 Empty,
                 self.reset_callback,
             )
             self.add_mask_service = rospy.Service(
-                "/tracking_ros/sam_controller/add_mask", Empty, self.add_mask_callback
+                "/sam_node/sam_controller/add_mask", Empty, self.add_mask_callback
             )
             self.reset_embed_service = rospy.Service(
-                "/tracking_ros/sam_controller/reset_embed",
+                "/sam_node/sam_controller/reset_embed",
                 Empty,
                 self.reset_embed_callback,
             )
 
             self.publish_mask_service = rospy.Service(
-                "/tracking_ros/sam_controller/publish_mask",
+                "/sam_node/sam_controller/publish_mask",
                 Empty,
                 self.publish_mask_callback,
             )
