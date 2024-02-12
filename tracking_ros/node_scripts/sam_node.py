@@ -8,6 +8,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PointStamped, PolygonStamped
 from std_srvs.srv import Empty, EmptyResponse
+from tracking_ros_utils.srv import SamPrompt, SamPromptResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
 from model_config import SAMConfig
@@ -19,44 +20,51 @@ class SAMNode(ConnectionBasedTransport):
         super(SAMNode, self).__init__()
         self.sam_config = SAMConfig.from_rosparam()
         self.predictor = self.sam_config.get_predictor()
+        self.interactive_mode = rospy.get_param("~interactive_mode", True)
 
         if self.sam_config.mode == "prompt":  # prompt mode
-            self.toggle_prompt_label_service = rospy.Service(
-                "/sam_node/sam_controller/toggle_label",
-                Empty,
-                self.toggle_prompt_label_callback,
-            )
-            self.clear_prompt_service = rospy.Service(
-                "/sam_node/sam_controller/clear_prompt",
-                Empty,
-                self.clear_prompt_callback,
-            )
-            self.reset_service = rospy.Service(
-                "/sam_node/sam_controller/reset",
-                Empty,
-                self.reset_callback,
-            )
-            self.add_mask_service = rospy.Service(
-                "/sam_node/sam_controller/add_mask", Empty, self.add_mask_callback
-            )
-            self.reset_embed_service = rospy.Service(
-                "/sam_node/sam_controller/reset_embed",
-                Empty,
-                self.reset_embed_callback,
-            )
-
-            self.publish_mask_service = rospy.Service(
-                "/sam_node/sam_controller/publish_mask",
-                Empty,
-                self.publish_mask_callback,
-            )
+            if self.interactive_mode:
+                self.toggle_prompt_label_service = rospy.Service(
+                    "/sam_node/sam_controller/toggle_label",
+                    Empty,
+                    self.toggle_prompt_label_callback,
+                )
+                self.clear_prompt_service = rospy.Service(
+                    "/sam_node/sam_controller/clear_prompt",
+                    Empty,
+                    self.clear_prompt_callback,
+                )
+                self.reset_service = rospy.Service(
+                    "/sam_node/sam_controller/reset",
+                    Empty,
+                    self.reset_callback,
+                )
+                self.add_mask_service = rospy.Service(
+                    "/sam_node/sam_controller/add_mask", Empty, self.add_mask_callback
+                )
+                self.reset_embed_service = rospy.Service(
+                    "/sam_node/sam_controller/reset_embed",
+                    Empty,
+                    self.reset_embed_callback,
+                )
+                self.publish_mask_service = rospy.Service(
+                    "/sam_node/sam_controller/publish_mask",
+                    Empty,
+                    self.publish_mask_callback,
+                )
+            else:
+                self.process_prompt_service = rospy.Service(
+                    "/sam_node/process_prompt",
+                    SamPrompt,
+                    self.process_prompt_callback,
+                )
         else:  # automatic mode
             self.num_slots = rospy.get_param(
                 "~num_slots", -1
             )  # number of masks to generate automatically, in order of score
 
         self.bridge = CvBridge()
-        self.pub_segmentation_img = self.advertise("~output/segmentation", Image, queue_size=1)
+        self.pub_seg = self.advertise("~output/segmentation", Image, queue_size=1)
         self.pub_vis_img = self.advertise("~output/segmentation_image", Image, queue_size=1)
 
         # initilize prompt
@@ -71,6 +79,32 @@ class SAMNode(ConnectionBasedTransport):
         self.num_mask = 0
         self.multimask = False
         self.embedded_image = None
+
+    def process_prompt_callback(self, srv):
+        # TODO: only bbox for now
+        self.image = self.bridge.imgmsg_to_cv2(srv.image, desired_encoding="rgb8")
+        result_mask = None
+        for i, box in enumerate(srv.boxes):
+            mask, logit = self.process_prompt(
+                points=None,
+                labels=None,
+                bbox=np.array([box.x, box.y, box.x + box.width, box.y + box.height]),
+                multimask=self.multimask,
+            )
+            if result_mask is None:
+                result_mask = mask.astype(np.uint8)
+            else:
+                result_mask[mask] = i + 1
+        self.visualization = self.image.copy()
+        if result_mask is not None:
+            self.visualization = overlay_davis(self.visualization, result_mask)
+        seg_msg = self.bridge.cv2_to_imgmsg(result_mask.astype(np.int32), encoding="32SC1")
+        vis_img_msg = self.bridge.cv2_to_imgmsg(self.visualization, encoding="rgb8")
+        seg_msg.header = srv.image.header
+        vis_img_msg.header = srv.image.header
+        self.pub_seg.publish(seg_msg)
+        self.pub_vis_img.publish(vis_img_msg)
+        return SamPromptResponse(segmentation=seg_msg, segmentation_image=vis_img_msg)
 
     def subscribe(self):
         self.sub_image = rospy.Subscriber(
@@ -247,7 +281,7 @@ class SAMNode(ConnectionBasedTransport):
             seg_msg = self.bridge.cv2_to_imgmsg(mask.astype(np.int32), encoding="32SC1")
             seg_msg.header.stamp = rospy.Time.now()
             seg_msg.header.frame_id = frame_id
-            self.pub_segmentation_img.publish(seg_msg)
+            self.pub_seg.publish(seg_msg)
         if vis is not None:
             vis_img_msg = self.bridge.cv2_to_imgmsg(vis, encoding="rgb8")
             vis_img_msg.header.stamp = rospy.Time.now()
@@ -255,45 +289,46 @@ class SAMNode(ConnectionBasedTransport):
             self.pub_vis_img.publish(vis_img_msg)
 
     def callback(self, img_msg):
-        self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-        if self.publish_mask:
-            self.publish_result(self.mask, self.visualization, img_msg.header.frame_id)
-        else:
-            if self.sam_config.mode == "prompt":  # when prompt mode
-                self.visualization = self.image.copy()
-                if self.mask is not None:  # if mask exists
-                    if self.prompt_mask is not None:  # if prompt mask exists
-                        paint_mask = self.mask.copy()
-                        paint_mask[self.prompt_mask] = self.num_mask + 1
-                        self.visualization = overlay_davis(self.visualization, paint_mask)
-                    else:  # if prompt mask does not exist
-                        self.visualization = overlay_davis(self.visualization, self.mask)
-                else:  # when initial state
-                    if self.prompt_mask is not None:  # if prompt mask exists
-                        self.visualization = overlay_davis(self.visualization, self.prompt_mask.astype(np.uint8))
-                self.visualization = draw_prompt(
-                    self.visualization,
-                    self.prompt_points,
-                    self.prompt_labels,
-                    self.prompt_bbox,
-                    f"Prompt {self.num_mask}",
-                )
-                self.publish_result(None, self.visualization, img_msg.header.frame_id)
-
+        if self.interactive_mode:
+            self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
+            if self.publish_mask:
+                self.publish_result(self.mask, self.visualization, img_msg.header.frame_id)
             else:
-                masks = self.predictor.generate(self.image)  # dict of masks
-                self.masks = [mask["segmentation"] for mask in masks]  # list of [H, W]
-                if self.num_slots > 0:
-                    self.masks = [mask["segmentation"] for mask in masks][: self.num_slots]
-                self.mask = np.zeros_like(self.masks[0]).astype(np.uint8)  # [H, W]
-                for i, mask in enumerate(self.masks):
-                    self.mask = np.clip(
-                        self.mask + mask * (i + 1),
-                        0,
-                        i + 1,
+                if self.sam_config.mode == "prompt":  # when prompt mode
+                    self.visualization = self.image.copy()
+                    if self.mask is not None:  # if mask exists
+                        if self.prompt_mask is not None:  # if prompt mask exists
+                            paint_mask = self.mask.copy()
+                            paint_mask[self.prompt_mask] = self.num_mask + 1
+                            self.visualization = overlay_davis(self.visualization, paint_mask)
+                        else:  # if prompt mask does not exist
+                            self.visualization = overlay_davis(self.visualization, self.mask)
+                    else:  # when initial state
+                        if self.prompt_mask is not None:  # if prompt mask exists
+                            self.visualization = overlay_davis(self.visualization, self.prompt_mask.astype(np.uint8))
+                    self.visualization = draw_prompt(
+                        self.visualization,
+                        self.prompt_points,
+                        self.prompt_labels,
+                        self.prompt_bbox,
+                        f"Prompt {self.num_mask}",
                     )
-                self.publish_mask = True
-                self.visualization = overlay_davis(self.image.copy(), self.mask)
+                    self.publish_result(None, self.visualization, img_msg.header.frame_id)
+
+                else:
+                    masks = self.predictor.generate(self.image)  # dict of masks
+                    self.masks = [mask["segmentation"] for mask in masks]  # list of [H, W]
+                    if self.num_slots > 0:
+                        self.masks = [mask["segmentation"] for mask in masks][: self.num_slots]
+                    self.mask = np.zeros_like(self.masks[0]).astype(np.uint8)  # [H, W]
+                    for i, mask in enumerate(self.masks):
+                        self.mask = np.clip(
+                            self.mask + mask * (i + 1),
+                            0,
+                            i + 1,
+                        )
+                    self.publish_mask = True
+                    self.visualization = overlay_davis(self.image.copy(), self.mask)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,9 @@
+# Request
+sensor_msgs/Image               image               # prompt image
+geometry_msgs/Point[]           points              # prompt points
+jsk_recognition_msgs/Rect[]     boxes                 # prompt box
+
+---
+# Response
+sensor_msgs/Image               segmentation        # segmentation mask
+sensor_msgs/Image               segmentation_image  # segmentation image
