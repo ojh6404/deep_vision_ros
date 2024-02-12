@@ -136,10 +136,10 @@ class GroundingDinoNode(ConnectionBasedTransport):
                 prompt.image = img_msg
                 for xyxy in detections.xyxy:
                     rect = Rect()
-                    rect.x = int(xyxy[0]) # x1
-                    rect.y = int(xyxy[1]) # y1
-                    rect.width = int(xyxy[2] - xyxy[0]) # x2 - x1
-                    rect.height = int(xyxy[3] - xyxy[1]) # y2 - y1
+                    rect.x = int(xyxy[0])  # x1
+                    rect.y = int(xyxy[1])  # y1
+                    rect.width = int(xyxy[2] - xyxy[0])  # x2 - x1
+                    rect.height = int(xyxy[3] - xyxy[1])  # y2 - y1
                     prompt.boxes.append(rect)
                 prompt_response = rospy.ServiceProxy("/sam_node/process_prompt", SamPrompt)
                 res = prompt_response(prompt)
@@ -151,7 +151,9 @@ class GroundingDinoNode(ConnectionBasedTransport):
         self.visualization = box_annotator.annotate(
             scene=self.visualization, detections=detections, labels=labels_with_scores
         )
-        self.publish_result(detections.xyxy, labels, scores, self.segmentation, self.visualization, img_msg.header.frame_id)
+        self.publish_result(
+            detections.xyxy, labels, scores, self.segmentation, self.visualization, img_msg.header.frame_id
+        )
 
 
 if __name__ == "__main__":
