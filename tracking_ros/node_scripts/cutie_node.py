@@ -9,6 +9,7 @@ import supervision as sv
 import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
+from std_srvs.srv import Empty, EmptyResponse
 
 from model_config import CutieConfig
 from utils import overlay_davis
@@ -17,10 +18,7 @@ from utils import overlay_davis
 class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracker needs continuous input
     def __init__(self):
         super(CutieNode, self).__init__()
-        self.cutie_config = CutieConfig.from_rosparam()
-        self.predictor = self.cutie_config.get_predictor()
         self.with_bbox = rospy.get_param("~with_bbox", False)
-
         self.bridge = CvBridge()
         self.initialize()
 
@@ -34,25 +32,35 @@ class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracke
         self.pub_vis_img = rospy.Publisher("~output/segmentation_image", Image, queue_size=1)
         self.pub_segmentation_img = rospy.Publisher("~output/segmentation", Image, queue_size=1)
 
+        # reset tracking service
+        self.reset_service = rospy.Service("~reset", Empty, self.reset_callback)
+
+    def reset_callback(self, req):
+        rospy.loginfo("Resetting Cutie tracker")
+        self.initialize()
+        return EmptyResponse()
+
     @torch.inference_mode()
     def initialize(self):
+        self.track_flag = False
+        self.cutie_config = CutieConfig.from_rosparam()
+        self.predictor = self.cutie_config.get_predictor()
         # oneshot subscribe initial image and segmentation
         input_seg_msg = rospy.wait_for_message("~input_segmentation", Image)
-        self.mask = self.bridge.imgmsg_to_cv2(input_seg_msg, desired_encoding="32SC1")
+        mask = self.bridge.imgmsg_to_cv2(input_seg_msg, desired_encoding="32SC1")
         input_img_msg = rospy.wait_for_message("~input_image", Image)
-        self.image = self.bridge.imgmsg_to_cv2(input_img_msg, desired_encoding="rgb8")
+        image = self.bridge.imgmsg_to_cv2(input_img_msg, desired_encoding="rgb8")
 
         # initialize the model with the mask
         with torch.cuda.amp.autocast(enabled=True):
             image_torch = (
-                torch.from_numpy(self.image.transpose(2, 0, 1)).float().to(self.cutie_config.device, non_blocking=True)
-                / 255
+                torch.from_numpy(image.transpose(2, 0, 1)).float().to(self.cutie_config.device, non_blocking=True) / 255
             )
             # initialize with the mask
             mask_torch = (
                 F.one_hot(
-                    torch.from_numpy(self.mask).long(),
-                    num_classes=len(np.unique(self.mask)),
+                    torch.from_numpy(mask).long(),
+                    num_classes=len(np.unique(mask)),
                 )
                 .permute(2, 0, 1)
                 .float()
@@ -60,6 +68,7 @@ class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracke
             )
             # the background mask is not fed into the model
             self.mask = self.predictor.step(image_torch, mask_torch[1:], idx_mask=False)
+        self.track_flag = True
 
     def publish_result(self, mask, vis, frame_id):
         if mask is not None:
@@ -75,34 +84,37 @@ class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracke
 
     @torch.inference_mode()
     def callback(self, img_msg):
-        self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-        with torch.cuda.amp.autocast(enabled=True):
-            image_torch = (
-                torch.from_numpy(self.image.transpose(2, 0, 1)).float().to(self.cutie_config.device, non_blocking=True)
-                / 255
-            )
-            prediction = self.predictor.step(image_torch)
-            self.mask = torch.max(prediction, dim=0).indices.cpu().numpy().astype(np.uint8)
-            self.visualization = overlay_davis(self.image.copy(), self.mask)
-            if self.with_bbox and len(np.unique(self.mask)) > 1:
-                masks = []
-                for i in range(1, len(np.unique(self.mask))):
-                    masks.append((self.mask == i).astype(np.uint8))
+        if self.track_flag:
+            self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
+            with torch.cuda.amp.autocast(enabled=True):
+                image_torch = (
+                    torch.from_numpy(self.image.transpose(2, 0, 1))
+                    .float()
+                    .to(self.cutie_config.device, non_blocking=True)
+                    / 255
+                )
+                prediction = self.predictor.step(image_torch)
+                self.mask = torch.max(prediction, dim=0).indices.cpu().numpy().astype(np.uint8)
+                self.visualization = overlay_davis(self.image.copy(), self.mask)
+                if self.with_bbox and len(np.unique(self.mask)) > 1:
+                    masks = []
+                    for i in range(1, len(np.unique(self.mask))):
+                        masks.append((self.mask == i).astype(np.uint8))
 
-                self.masks = np.stack(masks, axis=0)
-                xyxy = sv.mask_to_xyxy(self.masks)  # [N, 4]
-                detections = sv.Detections(
-                    xyxy=xyxy,
-                    mask=self.masks,
-                    tracker_id=np.arange(len(xyxy)),
-                )
-                box_annotator = sv.BoxAnnotator()
-                self.visualization = box_annotator.annotate(
-                    scene=self.visualization,
-                    detections=detections,
-                    labels=[f"ObjectID : {i}" for i in range(len(xyxy))],
-                )
-        self.publish_result(self.mask, self.visualization, img_msg.header.frame_id)
+                    self.masks = np.stack(masks, axis=0)
+                    xyxy = sv.mask_to_xyxy(self.masks)  # [N, 4]
+                    detections = sv.Detections(
+                        xyxy=xyxy,
+                        mask=self.masks,
+                        tracker_id=np.arange(len(xyxy)),
+                    )
+                    box_annotator = sv.BoxAnnotator()
+                    self.visualization = box_annotator.annotate(
+                        scene=self.visualization,
+                        detections=detections,
+                        labels=[f"ObjectID : {i}" for i in range(len(xyxy))],
+                    )
+            self.publish_result(self.mask, self.visualization, img_msg.header.frame_id)
 
 
 if __name__ == "__main__":

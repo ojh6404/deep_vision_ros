@@ -89,12 +89,14 @@ class CutieConfig(ROSInferenceModelConfig):
 
     def get_predictor(self):
         from omegaconf import open_dict
+        import hydra
         from hydra import compose, initialize
 
         from cutie.model.cutie import CUTIE
         from cutie.inference.inference_core import InferenceCore
         from cutie.inference.utils.args_utils import get_dataset_cfg
 
+        hydra.core.global_hydra.GlobalHydra.instance().clear()
         with torch.inference_mode():
             initialize(
                 version_base="1.3.2",
