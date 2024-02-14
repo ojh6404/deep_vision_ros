@@ -129,7 +129,7 @@ class GroundingDinoNode(ConnectionBasedTransport):
         box_annotator = sv.BoxAnnotator()
         self.visualization = self.image.copy()
         self.segmentation = None
-        if self.get_mask:
+        if self.get_mask and len(detections.xyxy) > 0:
             rospy.wait_for_service("/sam_node/process_prompt")
             try:
                 prompt = SamPromptRequest()
