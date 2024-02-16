@@ -1,6 +1,5 @@
 <launch>
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
-  <arg name="classes" default="monitor; cup; book; mouse" /> <!-- list of detection target -->
   <arg name="model_type" default="vit_t" /> <!-- SAM model : vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
   <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
   <arg name="with_bbox" default="true" /> <!-- false if faster, but for visualization -->
@@ -13,7 +12,6 @@
     <remap from="~input_image" to="$(arg input_image)" />
     <rosparam subst_value="true" >
         device: $(arg device)
-        classes: $(arg classes)
         model_type: $(arg model_type)
         with_bbox: $(arg with_bbox)
     </rosparam>
