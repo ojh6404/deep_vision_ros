@@ -77,10 +77,10 @@ class GroundingDinoNode(ConnectionBasedTransport):
             rects = []
             for box in boxes:
                 rect = Rect()
-                rect.x = int((box[0] + box[2]) / 2)
-                rect.y = int((box[1] + box[3]) / 2)
-                rect.width = int(box[2] - box[0])
-                rect.height = int(box[3] - box[1])
+                rect.x = int(box[0])  # x1
+                rect.y = int(box[1])  # y1
+                rect.width = int(box[2] - box[0])  # x2 - x1
+                rect.height = int(box[3] - box[1])  # y2 - y1
                 rects.append(rect)
             rect_array = RectArray(rects=rects)
             rect_array.header.stamp = rospy.Time.now()
