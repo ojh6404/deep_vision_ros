@@ -86,7 +86,6 @@ roslaunch tracking_ros_utils sam_gui.launch
 ```bash
 roslaunch tracking_ros deva.launch \
     input_image:=/kinect_head/rgb/image_rect_color \
-    classes:="monitor; keyboard; cup" \
     model_type:=vit_t \
     device:=cuda:0
 ```
@@ -94,9 +93,12 @@ or
 ```bash
 ./run_docker -host pr1040 -launch deva.launch \
     input_image:=/kinect_head/rgb/image_rect_color \
-    classes:="monitor; keyboard; cup" \
     model_type:=vit_t \
     device:=cuda:0
+```
+and use dynamic reconfigure to set detection and object tracking by
+```bash
+rosrun dynamic_reconfigure dynparam set /deva_node classes "cloth; cup; bottle;"
 ```
 
 ### TODO
