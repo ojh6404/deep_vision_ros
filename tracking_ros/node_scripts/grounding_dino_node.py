@@ -17,7 +17,6 @@ from tracking_ros_utils.srv import SamPrompt, SamPromptRequest
 
 from tracking_ros.cfg import GroundingDINOConfig as ServerConfig
 from model_config import GroundingDINOConfig
-from utils import draw_prompt, overlay_davis
 
 
 class GroundingDinoNode(ConnectionBasedTransport):
