@@ -10,8 +10,8 @@
   <arg name="always_subscribe" default="true" />
 
   <!-- yolo_world_node -->
-  <node name="yolo_world_node"
-          pkg="tracking_ros" type="yolo_world_node.py"
+  <node name="yolo_node"
+          pkg="tracking_ros" type="yolo_node.py"
           output="screen" >
     <remap from="~input_image" to="$(arg input_image)" />
     <remap from="~always_subscribe" to="$(arg always_subscribe)" />
