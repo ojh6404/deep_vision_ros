@@ -209,3 +209,26 @@ class GroundingDINOConfig(ROSInferenceModelConfig):
     @classmethod
     def from_rosparam(cls):
         return cls.from_args(rospy.get_param("~device", "cuda:0"))
+
+
+@dataclass
+class YOLOConfig(ROSInferenceModelConfig):
+    model_id: str = "yolo_world/l"
+
+    def get_predictor(self):
+        from inference.models.yolo_world.yolo_world import YOLOWorld
+
+        return YOLOWorld(
+            model_id=self.model_id,
+        )
+
+    @classmethod
+    def from_args(cls, model_id: str = "yolo_world/l", device: str = "cuda:0"):
+        return cls(model_name="YOLO", model_id=model_id, device=device)
+
+    @classmethod
+    def from_rosparam(cls):
+        return cls.from_args(
+            rospy.get_param("~model_id", "yolo_world/l"),
+            rospy.get_param("~device", "cuda:0"),
+        )
