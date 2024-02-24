@@ -125,7 +125,8 @@ class GroundingDinoNode(ConnectionBasedTransport):
         scores = detections.confidence.tolist()
         labels_with_scores = [f"{label} {score:.2f}" for label, score in zip(labels, scores)]
 
-        box_annotator = sv.BoxAnnotator()
+        box_annotator = sv.BoundingBoxAnnotator()
+        label_annotator = sv.LabelAnnotator()
         self.visualization = self.image.copy()
         self.segmentation = None
         if self.get_mask and len(detections.xyxy) > 0:
@@ -147,7 +148,8 @@ class GroundingDinoNode(ConnectionBasedTransport):
                 self.visualization = self.bridge.imgmsg_to_cv2(vis_img_msg, desired_encoding="rgb8")
             except rospy.ServiceException as e:
                 rospy.logerr(f"Service call failed: {e}")
-        self.visualization = box_annotator.annotate(
+        self.visualization = box_annotator.annotate(scene=self.visualization, detections=detections)
+        self.visualization = label_annotator.annotate(
             scene=self.visualization, detections=detections, labels=labels_with_scores
         )
         self.publish_result(
