@@ -26,6 +26,7 @@ from utils import overlay_davis
 
 torch.autograd.set_grad_enabled(False)
 
+BOX_ANNOTATOR = sv.BoxAnnotator()
 
 class DevaNode(ConnectionBasedTransport):
     def __init__(self):
@@ -149,10 +150,9 @@ class DevaNode(ConnectionBasedTransport):
                         mask=self.masks,
                         class_id=object_ids,
                     )
-                    box_annotator = sv.BoxAnnotator()
                     painted_image = overlay_davis(self.image.copy(), self.mask)
                     # TODO convert labels to class name, but it needs some trick because object id and class id is not consistent between tracking and detecting
-                    self.visualization = box_annotator.annotate(
+                    self.visualization = BOX_ANNOTATOR.annotate(
                         scene=painted_image,
                         detections=detections,
                         labels=[f"ObjectID: {obj_id}" for obj_id in object_ids],

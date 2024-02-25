@@ -18,6 +18,8 @@ from tracking_ros_utils.srv import SamPrompt, SamPromptRequest
 from tracking_ros.cfg import GroundingDINOConfig as ServerConfig
 from model_config import GroundingDINOConfig
 
+BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
+LABEL_ANNOTATOR = sv.LabelAnnotator()
 
 class GroundingDinoNode(ConnectionBasedTransport):
     def __init__(self):
@@ -125,8 +127,6 @@ class GroundingDinoNode(ConnectionBasedTransport):
         scores = detections.confidence.tolist()
         labels_with_scores = [f"{label} {score:.2f}" for label, score in zip(labels, scores)]
 
-        box_annotator = sv.BoundingBoxAnnotator()
-        label_annotator = sv.LabelAnnotator()
         self.visualization = self.image.copy()
         self.segmentation = None
         if self.get_mask and len(detections.xyxy) > 0:
@@ -148,8 +148,8 @@ class GroundingDinoNode(ConnectionBasedTransport):
                 self.visualization = self.bridge.imgmsg_to_cv2(vis_img_msg, desired_encoding="rgb8")
             except rospy.ServiceException as e:
                 rospy.logerr(f"Service call failed: {e}")
-        self.visualization = box_annotator.annotate(scene=self.visualization, detections=detections)
-        self.visualization = label_annotator.annotate(
+        self.visualization = BOX_ANNOTATOR.annotate(scene=self.visualization, detections=detections)
+        self.visualization = LABEL_ANNOTATOR.annotate(
             scene=self.visualization, detections=detections, labels=labels_with_scores
         )
         self.publish_result(

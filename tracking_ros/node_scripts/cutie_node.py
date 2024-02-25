@@ -14,6 +14,7 @@ from std_srvs.srv import Empty, EmptyResponse
 from model_config import CutieConfig
 from utils import overlay_davis
 
+BOX_ANNOTATOR = sv.BoxAnnotator()
 
 class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracker needs continuous input
     def __init__(self):
@@ -108,8 +109,7 @@ class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracke
                         mask=self.masks,
                         tracker_id=np.arange(len(xyxy)),
                     )
-                    box_annotator = sv.BoxAnnotator()
-                    self.visualization = box_annotator.annotate(
+                    self.visualization = BOX_ANNOTATOR.annotate(
                         scene=self.visualization,
                         detections=detections,
                         labels=[f"ObjectID : {i}" for i in range(len(xyxy))],
