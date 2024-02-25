@@ -5,6 +5,7 @@
   <arg name="mode" default="prompt" /> <!-- SAM mode : prompt, automatic -->
   <arg name="num_slots" default="10" /> <!-- max num of mask generation when automatic mode -->
   <arg name="interactive_mode" default="true" /> <!-- launch gui controller for sam -->
+  <arg name="refine_mask" default="true" /> <!-- refine mask predicts twice to refine mask -->
 
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="sam_output" default="/sam_node/output" />
@@ -22,6 +23,7 @@
         mode: $(arg mode)
         num_slots: $(arg num_slots)
         interactive_mode: $(arg interactive_mode)
+        refine_mask: $(arg refine_mask)
     </rosparam>
   </node>
 

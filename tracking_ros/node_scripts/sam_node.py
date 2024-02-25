@@ -21,6 +21,7 @@ class SAMNode(ConnectionBasedTransport):
         self.sam_config = SAMConfig.from_rosparam()
         self.predictor = self.sam_config.get_predictor()
         self.interactive_mode = rospy.get_param("~interactive_mode", True)
+        self.refine_mask = rospy.get_param("~refine_mask", False)
 
         if self.sam_config.mode == "prompt":  # prompt mode
             if self.interactive_mode:
@@ -260,20 +261,18 @@ class SAMNode(ConnectionBasedTransport):
             mask_input=mask_input,  # TODO
             multimask_output=multimask,
         )  # [N, H, W], B : number of prompts, N : number of masks recommended
-        mask, logit = (
-            masks[np.argmax(scores)],
-            logits[np.argmax(scores)],
-        )  # choose the best mask [H, W]
-
-        # refine mask using logit
-        masks, scores, logits = self.predictor.predict(
-            point_coords=points,
-            point_labels=labels,
-            box=bbox,
-            mask_input=logit[None, :, :],
-            multimask_output=multimask,
-        )
         mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
+
+        if self.refine_mask:
+            # refine mask using logit
+            masks, scores, logits = self.predictor.predict(
+                point_coords=points,
+                point_labels=labels,
+                box=bbox,
+                mask_input=logit[None, :, :],
+                multimask_output=multimask,
+            )
+            mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
         return mask, logit
 
     def publish_result(self, mask, vis, frame_id):

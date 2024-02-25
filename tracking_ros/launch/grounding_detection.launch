@@ -7,6 +7,7 @@
   <arg name="get_mask" default="false" /> <!-- get mask when grounding detection -->
   <arg name="track" default="false" />
   <arg name="with_bbox" default="true" /> <!-- false if faster, but for visualization -->
+  <arg name="refine_mask" default="true" /> <!-- refine mask predicts twice to refine mask -->
 
   <!-- grounding_dino_node -->
   <node name="grounding_dino_node"
@@ -30,6 +31,7 @@
         mode: $(arg mode)
         num_slots: $(arg num_slots)
         interactive_mode: false
+        refine_mask: $(arg refine_mask)
     </rosparam>
   </node>
 

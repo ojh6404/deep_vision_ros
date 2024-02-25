@@ -1,20 +1,20 @@
 <launch>
   <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="model_id" default="yolo_world/x" /> <!-- YOLO model : yolo_world/s, yolo_world/m, yolo_world/l, wolo_world/x -->
   <arg name="model_type" default="vit_t" /> <!-- SAM model : vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
   <arg name="mode" default="prompt" /> <!-- SAM mode : prompt, automatic -->
   <arg name="num_slots" default="10" /> <!-- max num of mask generation when automatic mode -->
   <arg name="get_mask" default="false" /> <!-- get mask when grounding detection -->
   <arg name="track" default="false" />
   <arg name="with_bbox" default="true" /> <!-- false if faster, but for visualization -->
-  <arg name="always_subscribe" default="true" />
+  <arg name="refine_mask" default="true" /> <!-- refine mask predicts twice to refine mask -->
 
   <!-- yolo_world_node -->
   <node name="yolo_node"
           pkg="tracking_ros" type="yolo_node.py"
           output="screen" >
     <remap from="~input_image" to="$(arg input_image)" />
-    <remap from="~always_subscribe" to="$(arg always_subscribe)" />
     <rosparam subst_value="true" >
         device: $(arg device)
         get_mask: $(arg get_mask)
@@ -32,6 +32,7 @@
         mode: $(arg mode)
         num_slots: $(arg num_slots)
         interactive_mode: false
+        refine_mask: $(arg refine_mask)
     </rosparam>
   </node>
 
