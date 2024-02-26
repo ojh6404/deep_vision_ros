@@ -97,6 +97,14 @@ def main():
         md5="bdb07fc17b611d622633d133d2cf873a",
     )
 
+    # VLPart
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_part_0a0000.pth",
+        url="https://github.com/Cheems-Seminar/grounded-segment-any-parts/releases/download/v1.0/swinbase_part_0a0000.pth",
+        md5="5f5d1dd844eee2a3ccacc74f176b2bc1",
+    )
+
 
 if __name__ == "__main__":
     main()
