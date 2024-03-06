@@ -11,6 +11,7 @@ from std_srvs.srv import Empty, EmptyResponse
 from tracking_ros_utils.srv import SamPrompt, SamPromptResponse
 from jsk_topic_tools import ConnectionBasedTransport
 
+from segment_anything.utils.amg import remove_small_regions
 from model_config import SAMConfig
 from utils import draw_prompt, overlay_davis
 
@@ -22,6 +23,9 @@ class SAMNode(ConnectionBasedTransport):
         self.predictor = self.sam_config.get_predictor()
         self.interactive_mode = rospy.get_param("~interactive_mode", True)
         self.refine_mask = rospy.get_param("~refine_mask", False)
+        if self.refine_mask:
+            self.area_threshold = rospy.get_param("~area_threshold", 400)
+            self.refine_mode = rospy.get_param("~refine_mode", "holes") # "holes" or "islands"
 
         if self.sam_config.mode == "prompt":  # prompt mode
             if self.interactive_mode:
@@ -273,6 +277,7 @@ class SAMNode(ConnectionBasedTransport):
                 multimask_output=multimask,
             )
             mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
+            mask, _ = remove_small_regions(mask, self.area_threshold, mode=self.refine_mode)
         return mask, logit
 
     def publish_result(self, mask, vis, frame_id):

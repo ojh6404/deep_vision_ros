@@ -1,0 +1,57 @@
+<launch>
+  <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="vocabulary" default="custom" /> <!-- "lvis", "paco"... "custom" -->
+  <arg name="classes" default="cup handle; bottle cap;" /> <!-- object to detect when vocabulary is custom -->
+  <arg name="confidence_threshold" default="0.5" /> <!-- confidence threshold -->
+  <arg name="use_sam" default="false" /> <!-- refine mask predicts twice to refine mask -->
+  <arg name="track" default="false" />
+
+  <arg name="model_type" default="vit_t" /> <!-- SAM model : vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
+  <arg name="mode" default="prompt" /> <!-- SAM mode : prompt, automatic -->
+  <arg name="num_slots" default="10" /> <!-- max num of mask generation when automatic mode -->
+  <arg name="refine_mask" default="false" /> <!-- refine mask predicts twice to refine mask -->
+  <arg name="area_threshold" default="400" /> <!-- refine mask area threshold -->
+  <arg name="refine_mode" default="holes" /> <!-- refine mode : "holes", "islands" -->
+
+  <!-- vlpart node -->
+  <node name="vlpart_node"
+          pkg="tracking_ros" type="vlpart_node.py"
+          output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+        use_sam: $(arg use_sam)
+        vocabulary: $(arg vocabulary)
+        classes: $(arg classes)
+        confidence_threshold: $(arg confidence_threshold)
+    </rosparam>
+  </node>
+
+  <!-- sam node -->
+  <node name="sam_node"
+          pkg="tracking_ros" type="sam_node.py"
+          output="screen" if="$(arg use_sam)">
+    <remap from="~input_image" to="$(arg input_image)" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+        model_type: $(arg model_type)
+        mode: $(arg mode)
+        num_slots: $(arg num_slots)
+        interactive_mode: false
+        refine_mask: $(arg refine_mask)
+    </rosparam>
+  </node>
+
+  <!-- cutie node -->
+  <node name="cutie_node"
+        pkg="tracking_ros" type="cutie_node.py"
+        output="screen" if="$(arg track)">
+    <remap from="~input_image" to="$(arg input_image)" />
+    <remap from="~input_segmentation" to="/vlpart_node/output/segmentation" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+        with_bbox: $(arg with_bbox)
+    </rosparam>
+  </node>
+</launch>
