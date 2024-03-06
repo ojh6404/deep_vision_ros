@@ -17,6 +17,7 @@ add_custom_target(${PROJECT_NAME}_install_trained_data ALL COMMAND python$ENV{RO
 generate_dynamic_reconfigure_options(
   cfg/GroundingDINO.cfg
   cfg/YOLO.cfg
+  cfg/VLPart.cfg
 )
 
 

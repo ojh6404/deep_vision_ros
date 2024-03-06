@@ -1,3 +1,6 @@
 [submodule "tracking_ros/Cutie"]
 	path = tracking_ros/Cutie
 	url = https://github.com/hkchengrex/Cutie.git
+[submodule "tracking_ros/VLPart"]
+	path = tracking_ros/VLPart
+	url = https://github.com/facebookresearch/VLPart.git
