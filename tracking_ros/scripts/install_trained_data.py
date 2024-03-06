@@ -98,11 +98,144 @@ def main():
     )
 
     # VLPart
+    # r50
     download_data(
         pkg_name=PKG,
-        path="trained_data/vlpart/swinbase_part_0a0000.pth",
-        url="https://github.com/Cheems-Seminar/grounded-segment-any-parts/releases/download/v1.0/swinbase_part_0a0000.pth",
+        path="trained_data/vlpart/r50_voc.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_voc.pth",
+        md5="70ce256b6f05810b5334f41f2402eb09",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_coco.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_coco.pth",
+        md5="1684ce2c837abfba9e884a30524df5bc",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_lvis.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_lvis.pth",
+        md5="42da3fccb40901041c0ee2fdc5683fd3",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_partimagenet.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_partimagenet.pth",
+        md5="4def166e3d1fd04a54d05992df32500c",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_pascalpart.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_pascalpart.pth",
+        md5="e5671ffdb282eb903173520a7e3c035a",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_paco.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_paco.pth",
+        md5="f8d5032b8e8caef5423dc8ce69f6e04c",
+    )
+
+    # r50 with joint training
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_lvis_paco.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_lvis_paco.pth",
+        md5="c2c80112b3d6ac6109053b6e5986b698",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_lvis_paco_pascalpart.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_lvis_paco_pascalpart.pth",
+        md5="854769b7901728fc9d1ce84189bb2e7b",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_lvis_paco_pascalpart_partimagenet.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_lvis_paco_pascalpart_partimagenet.pth",
+        md5="6783141824dd228f559063f52ec7aadd",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_lvis_paco_pascalpart_partimagenet_in.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_lvis_paco_pascalpart_partimagenet_in.pth",
+        md5="0943cefccedad36598bc1b32ae52c0e2",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/r50_lvis_paco_pascalpart_partimagenet_inparsed.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/r50_lvis_paco_pascalpart_partimagenet_inparsed.pth",
+        md5="2e8999eb3a8fabe9b5191bdd0a094f75",
+    )
+
+    # swinbase-cascade
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_voc.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_voc.pth",
+        md5="5e0a17bdfd0517ea7de14de6bcbea121",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_coco.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_coco.pth",
+        md5="f18c6e2aa099118afb07820ff970c5fe",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_lvis.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_lvis.pth",
+        md5="a909f64862104121817ba89784efd1c9",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_partimagenet.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_partimagenet.pth",
+        md5="ab757d04bd1c48ba8e4995f55d0fee54",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_pascalpart.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_pascalpart.pth",
+        md5="0119fa74970c32824c5806ea86658126",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_paco.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_paco.pth",
+        md5="157dd2d35400a1aa16c5dde8d17355b0",
+    )
+
+    # swinbase-cascade with joint training
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_lvis_paco.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_lvis_paco.pth",
+        md5="7969a7dfd9a5be8a7e88c7c174d54db2",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_lvis_paco_pascalpart.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_lvis_paco_pascalpart.pth",
         md5="5f5d1dd844eee2a3ccacc74f176b2bc1",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_lvis_paco_pascalpart_partimagenet.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_lvis_paco_pascalpart_partimagenet.pth",
+        md5="b0a1960530b4150ccb9c8d84174fa985",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.pth",
+        md5="013f21eb55b8ec0e5f3d5841e2186ab5",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/vlpart/swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.pth",
+        url="https://github.com/PeizeSun/VLPart/releases/download/v0.1/swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.pth",
+        md5="c2b4865ad03db1cf00d5da921a72c5de",
     )
 
 
