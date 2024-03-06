@@ -28,6 +28,7 @@ torch.autograd.set_grad_enabled(False)
 
 BOX_ANNOTATOR = sv.BoxAnnotator()
 
+
 class DevaNode(ConnectionBasedTransport):
     def __init__(self):
         super(DevaNode, self).__init__()

@@ -25,7 +25,7 @@ class SAMNode(ConnectionBasedTransport):
         self.refine_mask = rospy.get_param("~refine_mask", False)
         if self.refine_mask:
             self.area_threshold = rospy.get_param("~area_threshold", 400)
-            self.refine_mode = rospy.get_param("~refine_mode", "holes") # "holes" or "islands"
+            self.refine_mode = rospy.get_param("~refine_mode", "holes")  # "holes" or "islands"
 
         if self.sam_config.mode == "prompt":  # prompt mode
             if self.interactive_mode:

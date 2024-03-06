@@ -234,6 +234,7 @@ class YOLOConfig(ROSInferenceModelConfig):
             rospy.get_param("~device", "cuda:0"),
         )
 
+
 @dataclass
 class VLPartConfig(ROSInferenceModelConfig):
     model_type: str = "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed"
@@ -241,59 +242,77 @@ class VLPartConfig(ROSInferenceModelConfig):
     model_root = rospkg.RosPack().get_path("tracking_ros") + "/VLPart"
     model_checkpoint_root = os.path.join(CKECKPOINT_ROOT, "vlpart")
     model_checkpoints = {
-        "r50_voc" : os.path.join(model_checkpoint_root, "r50_voc.pth"),
-        "r50_coco" : os.path.join(model_checkpoint_root, "r50_coco.pth"),
-        "r50_lvis" : os.path.join(model_checkpoint_root, "r50_lvis.pth"),
-        "r50_partimagenet" : os.path.join(model_checkpoint_root, "r50_partimagenet.pth"),
-        "r50_pascalpart" : os.path.join(model_checkpoint_root, "r50_pascalpart.pth"),
-        "r50_paco" : os.path.join(model_checkpoint_root, "r50_paco.pth"),
-        "r50_lvis_paco" : os.path.join(model_checkpoint_root, "r50_lvis_paco.pth"),
-        "r50_lvis_paco_pascalpart" : os.path.join(model_checkpoint_root, "r50_lvis_paco_pascalpart.pth"),
-        "r50_lvis_paco_pascalpart_partimagenet" : os.path.join(model_checkpoint_root, "r50_lvis_paco_pascalpart_partimagenet.pth"),
-        "r50_lvis_paco_pascalpart_partimagenet_in" : os.path.join(model_checkpoint_root, "r50_lvis_paco_pascalpart_partimagenet_in.pth"),
-        "r50_lvis_paco_pascalpart_partimagenet_inparsed" : os.path.join(model_checkpoint_root, "r50_lvis_paco_pascalpart_partimagenet_inparsed.pth"),
-        "swinbase_cascade_voc" : os.path.join(model_checkpoint_root, "swinbase_cascade_voc.pth"),
-        "swinbase_cascade_coco" : os.path.join(model_checkpoint_root, "swinbase_cascade_coco.pth"),
-        "swinbase_cascade_lvis" : os.path.join(model_checkpoint_root, "swinbase_cascade_lvis.pth"),
-        "swinbase_cascade_partimagenet" : os.path.join(model_checkpoint_root, "swinbase_cascade_partimagenet.pth"),
-        "swinbase_cascade_pascalpart" : os.path.join(model_checkpoint_root, "swinbase_cascade_pascalpart.pth"),
-        "swinbase_cascade_paco" : os.path.join(model_checkpoint_root, "swinbase_cascade_paco.pth"),
-        "swinbase_cascade_lvis_paco" : os.path.join(model_checkpoint_root, "swinbase_cascade_lvis_paco.pth"),
-        "swinbase_cascade_lvis_paco_pascalpart" : os.path.join(model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart.pth"),
-        "swinbase_cascade_lvis_paco_pascalpart_partimagenet" : os.path.join(model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet.pth"),
-        "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in" : os.path.join(model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.pth"),
-        "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed" : os.path.join(model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.pth"),
+        "r50_voc": os.path.join(model_checkpoint_root, "r50_voc.pth"),
+        "r50_coco": os.path.join(model_checkpoint_root, "r50_coco.pth"),
+        "r50_lvis": os.path.join(model_checkpoint_root, "r50_lvis.pth"),
+        "r50_partimagenet": os.path.join(model_checkpoint_root, "r50_partimagenet.pth"),
+        "r50_pascalpart": os.path.join(model_checkpoint_root, "r50_pascalpart.pth"),
+        "r50_paco": os.path.join(model_checkpoint_root, "r50_paco.pth"),
+        "r50_lvis_paco": os.path.join(model_checkpoint_root, "r50_lvis_paco.pth"),
+        "r50_lvis_paco_pascalpart": os.path.join(model_checkpoint_root, "r50_lvis_paco_pascalpart.pth"),
+        "r50_lvis_paco_pascalpart_partimagenet": os.path.join(
+            model_checkpoint_root, "r50_lvis_paco_pascalpart_partimagenet.pth"
+        ),
+        "r50_lvis_paco_pascalpart_partimagenet_in": os.path.join(
+            model_checkpoint_root, "r50_lvis_paco_pascalpart_partimagenet_in.pth"
+        ),
+        "r50_lvis_paco_pascalpart_partimagenet_inparsed": os.path.join(
+            model_checkpoint_root, "r50_lvis_paco_pascalpart_partimagenet_inparsed.pth"
+        ),
+        "swinbase_cascade_voc": os.path.join(model_checkpoint_root, "swinbase_cascade_voc.pth"),
+        "swinbase_cascade_coco": os.path.join(model_checkpoint_root, "swinbase_cascade_coco.pth"),
+        "swinbase_cascade_lvis": os.path.join(model_checkpoint_root, "swinbase_cascade_lvis.pth"),
+        "swinbase_cascade_partimagenet": os.path.join(model_checkpoint_root, "swinbase_cascade_partimagenet.pth"),
+        "swinbase_cascade_pascalpart": os.path.join(model_checkpoint_root, "swinbase_cascade_pascalpart.pth"),
+        "swinbase_cascade_paco": os.path.join(model_checkpoint_root, "swinbase_cascade_paco.pth"),
+        "swinbase_cascade_lvis_paco": os.path.join(model_checkpoint_root, "swinbase_cascade_lvis_paco.pth"),
+        "swinbase_cascade_lvis_paco_pascalpart": os.path.join(
+            model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart.pth"
+        ),
+        "swinbase_cascade_lvis_paco_pascalpart_partimagenet": os.path.join(
+            model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet.pth"
+        ),
+        "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in": os.path.join(
+            model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.pth"
+        ),
+        "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed": os.path.join(
+            model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.pth"
+        ),
     }
     model_configs = {
-        "r50_voc" : os.path.join(model_root, "configs/voc/r50_voc.yaml"),
-        "r50_coco" : os.path.join(model_root, "configs/coco/r50_coco.yaml"),
-        "r50_lvis" : os.path.join(model_root, "configs/lvis/r50_lvis.yaml"),
-        "r50_partimagenet" : os.path.join(model_root, "configs/partimagenet/r50_partimagenet.yaml"),
-        "r50_pascalpart" : os.path.join(model_root, "configs/pascalpart/r50_pascalpart.yaml"),
-        "r50_paco" : os.path.join(model_root, "configs/joint/r50_lvis_paco.yaml"),
-        "r50_lvis_paco" : os.path.join(model_root, "configs/joint/r50_lvis_paco.yaml"),
-        "r50_lvis_paco_pascalpart" : os.path.join(model_root, "configs/joint/r50_lvis_paco_pascalpart.yaml"),
-        "r50_lvis_paco_pascalpart_partimagenet" : os.path.join(
+        "r50_voc": os.path.join(model_root, "configs/voc/r50_voc.yaml"),
+        "r50_coco": os.path.join(model_root, "configs/coco/r50_coco.yaml"),
+        "r50_lvis": os.path.join(model_root, "configs/lvis/r50_lvis.yaml"),
+        "r50_partimagenet": os.path.join(model_root, "configs/partimagenet/r50_partimagenet.yaml"),
+        "r50_pascalpart": os.path.join(model_root, "configs/pascalpart/r50_pascalpart.yaml"),
+        "r50_paco": os.path.join(model_root, "configs/joint/r50_lvis_paco.yaml"),
+        "r50_lvis_paco": os.path.join(model_root, "configs/joint/r50_lvis_paco.yaml"),
+        "r50_lvis_paco_pascalpart": os.path.join(model_root, "configs/joint/r50_lvis_paco_pascalpart.yaml"),
+        "r50_lvis_paco_pascalpart_partimagenet": os.path.join(
             model_root, "configs/joint/r50_lvis_paco_pascalpart_partimagenet.yaml"
         ),
-        "r50_lvis_paco_pascalpart_partimagenet_in" : os.path.join(
+        "r50_lvis_paco_pascalpart_partimagenet_in": os.path.join(
             model_root, "configs/joint_in/r50_lvis_paco_pascalpart_partimagenet_in.yaml"
         ),
-        "r50_lvis_paco_pascalpart_partimagenet_inparsed" : os.path.join(
+        "r50_lvis_paco_pascalpart_partimagenet_inparsed": os.path.join(
             model_root, "configs/joint_in/r50_lvis_paco_pascalpart_partimagenet_inparsed.yaml"
         ),
-        "swinbase_cascade_voc" : os.path.join(model_root, "configs/voc/swinbase_cascade_voc.yaml"),
-        "swinbase_cascade_coco" : os.path.join(model_root, "configs/coco/swinbase_cascade_coco.yaml"),
-        "swinbase_cascade_lvis" : os.path.join(model_root, "configs/lvis/swinbase_cascade_lvis.yaml"),
-        "swinbase_cascade_partimagenet" : os.path.join(model_root, "configs/partimagenet/swinbase_cascade_partimagenet.yaml"),
-        "swinbase_cascade_pascalpart" : os.path.join(model_root, "configs/pascalpart/swinbase_cascade_pascalpart.yaml"),
-        "swinbase_cascade_paco" : os.path.join(model_root, "configs/joint/swinbase_cascade_lvis_paco.yaml"),
-        "swinbase_cascade_lvis_paco" : os.path.join(model_root, "configs/joint/swinbase_cascade_lvis_paco.yaml"),
-        "swinbase_cascade_lvis_paco_pascalpart" : os.path.join(model_root, "configs/joint/swinbase_cascade_lvis_paco_pascalpart.yaml"),
-        "swinbase_cascade_lvis_paco_pascalpart_partimagenet" : os.path.join(
+        "swinbase_cascade_voc": os.path.join(model_root, "configs/voc/swinbase_cascade_voc.yaml"),
+        "swinbase_cascade_coco": os.path.join(model_root, "configs/coco/swinbase_cascade_coco.yaml"),
+        "swinbase_cascade_lvis": os.path.join(model_root, "configs/lvis/swinbase_cascade_lvis.yaml"),
+        "swinbase_cascade_partimagenet": os.path.join(
+            model_root, "configs/partimagenet/swinbase_cascade_partimagenet.yaml"
+        ),
+        "swinbase_cascade_pascalpart": os.path.join(model_root, "configs/pascalpart/swinbase_cascade_pascalpart.yaml"),
+        "swinbase_cascade_paco": os.path.join(model_root, "configs/joint/swinbase_cascade_lvis_paco.yaml"),
+        "swinbase_cascade_lvis_paco": os.path.join(model_root, "configs/joint/swinbase_cascade_lvis_paco.yaml"),
+        "swinbase_cascade_lvis_paco_pascalpart": os.path.join(
+            model_root, "configs/joint/swinbase_cascade_lvis_paco_pascalpart.yaml"
+        ),
+        "swinbase_cascade_lvis_paco_pascalpart_partimagenet": os.path.join(
             model_root, "configs/joint/swinbase_cascade_lvis_paco_pascalpart_partimagenet.yaml"
         ),
-        "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in" : os.path.join(
+        "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in": os.path.join(
             model_root, "configs/joint_in/swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.yaml"
         ),
         "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed": os.path.join(
@@ -301,11 +320,14 @@ class VLPartConfig(ROSInferenceModelConfig):
         ),
     }
 
-    def get_predictor(self, vocabulary: str = "custom", custom_vocabulary: List[str] = [], confidence_threshold: float = 0.7):
+    def get_predictor(
+        self, vocabulary: str = "custom", custom_vocabulary: List[str] = [], confidence_threshold: float = 0.7
+    ):
         from detectron2.config import get_cfg
 
         import sys
         import argparse
+
         sys.path.insert(0, self.model_root)
         from vlpart.config import add_vlpart_config
         from demo.predictor import VisualizationDemo
@@ -324,27 +346,23 @@ class VLPartConfig(ROSInferenceModelConfig):
             # replace the filename in the list to the full path
             for idx, filename in enumerate(cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH_GROUP):
                 if filename:
-                    cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH_GROUP[idx] = os.path.join(
-                        self.model_root, filename
-                    )
+                    cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH_GROUP[idx] = os.path.join(self.model_root, filename)
             cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_INFERENCE_PATH = os.path.join(
                 self.model_root, cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_INFERENCE_PATH
             )
             for idx, filename in enumerate(cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH_GROUP):
                 if filename:
-                    cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH_GROUP[idx] = os.path.join(
-                        self.model_root, filename
-                    )
+                    cfg.MODEL.ROI_BOX_HEAD.CAT_FREQ_PATH_GROUP[idx] = os.path.join(self.model_root, filename)
             cfg.freeze()
             return cfg
 
         custom_vocabulary = ",".join(custom_vocabulary) if vocabulary == "custom" else ""
         args = {
-            "config_file" : self.model_configs[self.model_type],
-            "vocabulary" : vocabulary,
-            "custom_vocabulary" : custom_vocabulary,
-            "confidence_threshold" : confidence_threshold,
-            "opts" : ['MODEL.WEIGHTS', self.model_checkpoints[self.model_type], 'VIS.BOX', 'False'],
+            "config_file": self.model_configs[self.model_type],
+            "vocabulary": vocabulary,
+            "custom_vocabulary": custom_vocabulary,
+            "confidence_threshold": confidence_threshold,
+            "opts": ["MODEL.WEIGHTS", self.model_checkpoints[self.model_type], "VIS.BOX", "False"],
         }
         print(args)
 
@@ -353,7 +371,6 @@ class VLPartConfig(ROSInferenceModelConfig):
 
         demo = VisualizationDemo(cfg, args)
         return demo
-
 
     @classmethod
     def from_args(cls, device: str = "cuda:0"):

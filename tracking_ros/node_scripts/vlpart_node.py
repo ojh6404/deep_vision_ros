@@ -23,12 +23,17 @@ from utils import overlay_davis
 BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
 LABEL_ANNOTATOR = sv.LabelAnnotator()
 
+
 class VLPartNode(ConnectionBasedTransport):
     def __init__(self):
         super(VLPartNode, self).__init__()
         # self.reconfigure_server = Server(ServerConfig, self.config_cb)
         self.vocabulary = rospy.get_param("~vocabulary", "custom")
-        self.classes = [_class.strip() for _class in rospy.get_param("~classes", "bottle cap; cup handle;").split(";") if _class.strip()]
+        self.classes = [
+            _class.strip()
+            for _class in rospy.get_param("~classes", "bottle cap; cup handle;").split(";")
+            if _class.strip()
+        ]
         self.confidence_threshold = rospy.get_param("~confidence_threshold", 0.5)
         self.use_sam = rospy.get_param("~use_sam", False)
         self.initialize()
@@ -126,13 +131,13 @@ class VLPartNode(ConnectionBasedTransport):
 
             # vlpart model inference
             predictions, _ = self.vlpart_predictor.run_on_image(cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR))
-            instances = predictions['instances'].to('cpu')
+            instances = predictions["instances"].to("cpu")
             classes = instances.pred_classes.tolist()
 
-            if classes: # if there are any detections
+            if classes:  # if there are any detections
                 boxes = instances.pred_boxes.tensor
                 scores = instances.scores
-                masks = instances.pred_masks # [N, H, W]
+                masks = instances.pred_masks  # [N, H, W]
                 for i, mask in enumerate(masks):
                     if self.segmentation is None:
                         self.segmentation = mask.numpy().astype(np.int32)
@@ -143,7 +148,7 @@ class VLPartNode(ConnectionBasedTransport):
                 labels = [self.classes[cls_id] for cls_id in classes]
                 scores = scores.tolist()
                 labels_with_scores = [f"{label} {score:.2f}" for label, score in zip(labels, scores)]
-                xyxys = boxes.cpu().numpy() # [N, 4]
+                xyxys = boxes.cpu().numpy()  # [N, 4]
 
                 detections = sv.Detections(
                     xyxy=xyxys,
@@ -173,10 +178,7 @@ class VLPartNode(ConnectionBasedTransport):
                 self.visualization = LABEL_ANNOTATOR.annotate(
                     scene=self.visualization, detections=detections, labels=labels_with_scores
                 )
-            self.publish_result(
-                xyxys, labels, scores, self.segmentation, self.visualization, img_msg.header.frame_id
-            )
-
+            self.publish_result(xyxys, labels, scores, self.segmentation, self.visualization, img_msg.header.frame_id)
 
 
 if __name__ == "__main__":

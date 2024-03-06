@@ -21,6 +21,7 @@ from model_config import GroundingDINOConfig
 BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
 LABEL_ANNOTATOR = sv.LabelAnnotator()
 
+
 class GroundingDinoNode(ConnectionBasedTransport):
     def __init__(self):
         super(GroundingDinoNode, self).__init__()

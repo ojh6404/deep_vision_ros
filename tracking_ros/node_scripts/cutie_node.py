@@ -16,6 +16,7 @@ from utils import overlay_davis
 
 BOX_ANNOTATOR = sv.BoxAnnotator()
 
+
 class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracker needs continuous input
     def __init__(self):
         super(CutieNode, self).__init__()
