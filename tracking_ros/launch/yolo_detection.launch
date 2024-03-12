@@ -1,7 +1,7 @@
 <launch>
   <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
-  <arg name="model_id" default="yolo_world/x" /> <!-- YOLO model : yolo_world/s, yolo_world/m, yolo_world/l, wolo_world/x -->
+  <arg name="model_id" default="yolov8x-worldv2.pt" /> <!-- YOLO model, refer ultralytics yolo world model -->
   <arg name="model_type" default="vit_t" /> <!-- SAM model : vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
   <arg name="mode" default="prompt" /> <!-- SAM mode : prompt, automatic -->
   <arg name="num_slots" default="10" /> <!-- max num of mask generation when automatic mode -->
