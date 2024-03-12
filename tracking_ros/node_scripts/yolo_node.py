@@ -19,6 +19,7 @@ from model_config import YOLOConfig
 BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
 LABEL_ANNOTATOR = sv.LabelAnnotator()
 
+
 class YOLONode(ConnectionBasedTransport):
     def __init__(self):
         super(YOLONode, self).__init__()
