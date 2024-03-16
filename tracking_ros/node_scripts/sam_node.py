@@ -257,9 +257,8 @@ class SAMNode(ConnectionBasedTransport):
         mask_input=None,
         multimask: bool = True,
     ):
-        if self.embedded_image is None:
-            self.embedded_image = self.image
-            self.predictor.set_image(self.embedded_image)
+        self.embedded_image = self.image
+        self.predictor.set_image(self.embedded_image)
         masks, scores, logits = self.predictor.predict(
             point_coords=points,
             point_labels=labels,
