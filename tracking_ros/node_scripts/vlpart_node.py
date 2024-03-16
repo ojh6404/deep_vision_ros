@@ -123,8 +123,8 @@ class VLPartNode(ConnectionBasedTransport):
     def callback(self, img_msg):
         if self.detect_flag:
             self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-            self.segmentation = None
-            self.visualization = self.image.copy()
+            visualization = self.image.copy()
+            segmentation = None
             xyxys = None
             labels = None
             scores = None
@@ -139,11 +139,11 @@ class VLPartNode(ConnectionBasedTransport):
                 scores = instances.scores
                 masks = instances.pred_masks  # [N, H, W]
                 for i, mask in enumerate(masks):
-                    if self.segmentation is None:
-                        self.segmentation = mask.numpy().astype(np.int32)
+                    if segmentation is None:
+                        segmentation = mask.numpy().astype(np.int32)
                     else:
-                        self.segmentation[mask] = i + 1
-                self.visualization = overlay_davis(self.visualization, self.segmentation)
+                        segmentation[mask] = i + 1
+                visualization = overlay_davis(visualization, segmentation)  # type: ignore
 
                 labels = [self.classes[cls_id] for cls_id in classes]
                 scores = scores.tolist()
@@ -170,15 +170,15 @@ class VLPartNode(ConnectionBasedTransport):
                         prompt_response = rospy.ServiceProxy("/sam_node/process_prompt", SamPrompt)
                         res = prompt_response(prompt)
                         seg_msg, vis_img_msg = res.segmentation, res.segmentation_image
-                        self.segmentation = self.bridge.imgmsg_to_cv2(seg_msg, desired_encoding="32SC1")
-                        self.visualization = self.bridge.imgmsg_to_cv2(vis_img_msg, desired_encoding="rgb8")
+                        segmentation = self.bridge.imgmsg_to_cv2(seg_msg, desired_encoding="32SC1")
+                        visualization = self.bridge.imgmsg_to_cv2(vis_img_msg, desired_encoding="rgb8")
                     except rospy.ServiceException as e:
                         rospy.logerr(f"Service call failed: {e}")
-                self.visualization = BOX_ANNOTATOR.annotate(scene=self.visualization, detections=detections)
-                self.visualization = LABEL_ANNOTATOR.annotate(
-                    scene=self.visualization, detections=detections, labels=labels_with_scores
+                visualization = BOX_ANNOTATOR.annotate(scene=visualization, detections=detections)
+                visualization = LABEL_ANNOTATOR.annotate(
+                    scene=visualization, detections=detections, labels=labels_with_scores
                 )
-            self.publish_result(xyxys, labels, scores, self.segmentation, self.visualization, img_msg.header.frame_id)
+            self.publish_result(xyxys, labels, scores, segmentation, visualization, img_msg.header.frame_id)
 
 
 if __name__ == "__main__":
