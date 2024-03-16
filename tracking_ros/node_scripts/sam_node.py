@@ -88,6 +88,8 @@ class SAMNode(ConnectionBasedTransport):
     def process_prompt_callback(self, srv):
         # TODO: only bbox for now
         self.image = self.bridge.imgmsg_to_cv2(srv.image, desired_encoding="rgb8")
+        self.embedded_image = self.image
+        self.predictor.set_image(self.embedded_image)
         result_mask = None
         for i, box in enumerate(srv.boxes):
             mask, logit = self.process_prompt(
