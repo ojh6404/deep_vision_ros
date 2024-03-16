@@ -1,0 +1,3 @@
+[flake8]
+exclude = Cutie,VLPart,cfg
+extend-ignore = H,E501,W503,F841,F401

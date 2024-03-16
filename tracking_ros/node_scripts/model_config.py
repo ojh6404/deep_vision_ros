@@ -356,7 +356,7 @@ class VLPartConfig(ROSInferenceModelConfig):
             cfg.freeze()
             return cfg
 
-        custom_vocabulary = ",".join(custom_vocabulary) if vocabulary == "custom" else ""
+        custom_vocabulary = ",".join(custom_vocabulary) if vocabulary == "custom" else ""  # type: ignore
         args = {
             "config_file": self.model_configs[self.model_type],
             "vocabulary": vocabulary,
@@ -366,7 +366,7 @@ class VLPartConfig(ROSInferenceModelConfig):
         }
         print(args)
 
-        args = argparse.Namespace(**args)
+        args = argparse.Namespace(**args)  # type: ignore
         cfg = setup_cfg(args)
 
         demo = VisualizationDemo(cfg, args)

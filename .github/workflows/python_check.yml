@@ -16,7 +16,7 @@ jobs:
           uses: actions/checkout@v2
         - name: pip install formatters and checkers
           run: |
-              pip3 install mypy isort black pyproject-flake8
+              pip3 install mypy isort black flake8
         - name: pip install torch and numpy for module build
           run: |
               pip3 install numpy>=1.24 torch>=2.0
@@ -32,4 +32,4 @@ jobs:
           run: |
               cd tracking_ros
               python3 -m black .
-              python3 -m pflake8 node_scripts/ scripts/ test/
+              python3 -m flake8 .
