@@ -5,6 +5,7 @@
   <arg name="launch_manager" default="true" />
   <arg name="machine" default="localhost" />
   <arg name="namespace" default="kinect_head_remote" />
+  <arg name="decompress" default="false" />
 
   <arg name="RGB_CAMERA_INFO" default="/kinect_head/rgb/camera_info" />
   <arg name="RGB_IMAGE" default="/kinect_head/rgb/image_rect_color" />
@@ -20,12 +21,13 @@
   <node name="rgb_decompress" pkg="image_transport" type="republish"
         args="compressed in:=$(arg RGB_IMAGE) out:=$(arg RGB_REMOTE_IMAGE)" />
   <node name="depth_decompress" pkg="image_transport" type="republish"
-        args="compressedDepth in:=$(arg DEPTH_IMAGE) out:=$(arg DEPTH_REMOTE_IMAGE)" />
+        args="compressedDepth in:=$(arg DEPTH_IMAGE) out:=$(arg DEPTH_REMOTE_IMAGE)" if="$(arg decompress)" />
   <node pkg="nodelet" type="nodelet" name="point_cloud_xyzrgb"
         args="load depth_image_proc/point_cloud_xyzrgb $(arg manager)" output="screen" >
     <remap from="rgb/camera_info" to="$(arg RGB_CAMERA_INFO)" />
     <remap from="rgb/image_rect_color" to="$(arg RGB_REMOTE_IMAGE)" />
-    <remap from="depth_registered/image_rect" to="$(arg DEPTH_REMOTE_IMAGE)" />
+    <remap from="depth_registered/image_rect" to="$(arg DEPTH_IMAGE)" unless="$(arg decompress)" />
+    <remap from="depth_registered/image_rect" to="$(arg DEPTH_REMOTE_IMAGE)" if="$(arg decompress)" />
     <remap from="depth_registered/points" to="$(arg CLOUD)" />
     <rosparam>
       queue_size: 100

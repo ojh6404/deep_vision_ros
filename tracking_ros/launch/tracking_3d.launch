@@ -1,6 +1,7 @@
 <launch>
   <arg name="namespace" default="tracking_ros" />
   <arg name="standalone" default="false"/> <!-- debug nodes by setting then standalone -->
+  <arg name="decompress" default="false" />
   <arg name="MANAGER" value="detection_manager" unless="$(arg standalone)"/>
   <arg name="MANAGER" value="" if="$(arg standalone)"/>
   <arg name="LOAD_STATEMENT" value="load" unless="$(arg standalone)"/>
@@ -15,9 +16,10 @@
   <group ns='$(arg namespace)'>
     <node name="$(arg MANAGER)" pkg="nodelet" type="nodelet" args="manager"/>
 
-    <include file="$(find tracking_ros)/launch/decompress_point_cloud.launch" >
+    <include file="$(find tracking_ros)/launch/create_point_cloud.launch" >
       <arg name="launch_manager" value="false"/> <!-- already launched -->
       <arg name="manager" value="$(arg MANAGER)"/>
+      <arg name="decompress" value="$(arg decompress)"/>
       <arg name="namespace" value="$(arg namespace)"/>
       <arg name="RGB_CAMERA_INFO" value="$(arg input_camera_info)" />
       <arg name="RGB_IMAGE" value="$(arg input_image)" />
@@ -60,10 +62,11 @@
         align_boxes: true
         align_boxes_with_plane: false
         force_to_flip_z_axis: false
-        use_pca: false
+        use_pca: true
         target_frame_id: $(arg target_frame_id)
         approximate_sync: true
         queue_size: 100
+        publish_tf: true
       </rosparam>
     </node>
   </group>
