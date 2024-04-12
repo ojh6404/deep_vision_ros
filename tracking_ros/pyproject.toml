@@ -18,6 +18,7 @@ check_untyped_defs = true
 module = [
        "rospy",
        "rostest",
+       "rosnode",
        "rospkg",
        "cv_bridge",
        "dynamic_reconfigure.*",

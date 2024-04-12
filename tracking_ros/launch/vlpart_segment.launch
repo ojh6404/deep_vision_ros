@@ -1,6 +1,8 @@
 <launch>
   <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
+  <arg name="reconfigure" default="false" />
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="vlpart_node_name" default="vlpart_node"/>
   <arg name="vocabulary" default="custom" /> <!-- "lvis", "paco"... "custom" -->
   <arg name="classes" default="cup handle; bottle cap;" /> <!-- object to detect when vocabulary is custom -->
   <arg name="confidence_threshold" default="0.5" /> <!-- confidence threshold -->
@@ -15,10 +17,25 @@
   <arg name="area_threshold" default="400" /> <!-- refine mask area threshold -->
   <arg name="refine_mode" default="holes" /> <!-- refine mode : "holes", "islands" -->
 
+  <!-- vlpart reconfigure node -->
+  <node name="vlpart_reconfigure_node"
+          pkg="tracking_ros" type="vlpart_reconfigure_node.py"
+          output="screen" if="$(arg reconfigure)" >
+    <rosparam subst_value="true" >
+        input_image: $(arg input_image)
+        node_name: /$(arg vlpart_node_name)
+        device: $(arg device)
+        use_sam: $(arg use_sam)
+        vocabulary: $(arg vocabulary)
+        classes: $(arg classes)
+        confidence_threshold: $(arg confidence_threshold)
+    </rosparam>
+  </node>
+
   <!-- vlpart node -->
-  <node name="vlpart_node"
+  <node name="$(arg vlpart_node_name)"
           pkg="tracking_ros" type="vlpart_node.py"
-          output="screen" >
+          output="screen" unless="$(arg reconfigure)" >
     <remap from="~input_image" to="$(arg input_image)" />
     <rosparam subst_value="true" >
         device: $(arg device)
