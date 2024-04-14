@@ -1,0 +1,6 @@
+# Request
+sensor_msgs/Image               image           # prompt image
+sensor_msgs/Image               segmentation    # prompt segmentation
+---
+# Response
+bool                            result          # tracker set result

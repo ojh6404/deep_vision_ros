@@ -9,6 +9,7 @@ find_package(catkin REQUIRED
 add_service_files(
     FILES
     SamPrompt.srv
+    CutiePrompt.srv
 )
 generate_messages(
     DEPENDENCIES
