@@ -6,6 +6,9 @@
   <arg name="num_slots" default="10" /> <!-- max num of mask generation when automatic mode -->
   <arg name="interactive_mode" default="true" /> <!-- launch gui controller for sam -->
   <arg name="refine_mask" default="true" /> <!-- refine mask predicts twice to refine mask -->
+  <arg name="reset_track" default="/cutie_node/reset"/>
+  <arg name="cutie_prompt" default="/cutie_node/process_prompt"/>
+  <arg name="track" default="true"/>
 
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
   <arg name="sam_output" default="/sam_node/output" />
@@ -17,6 +20,7 @@
     <remap from="~input_image" to="$(arg input_image)" />
     <remap from="~input_point" to="$(arg sam_output)/segmentation_image/screenpoint" />
     <remap from="~input_bbox" to="$(arg sam_output)/segmentation_image/screenrectangle" />
+    <remap from="~process_track" to="$(arg cutie_prompt)" />
     <rosparam subst_value="true" >
         device: $(arg device)
         model_type: $(arg model_type)
@@ -24,15 +28,18 @@
         num_slots: $(arg num_slots)
         interactive_mode: $(arg interactive_mode)
         refine_mask: $(arg refine_mask)
+        track: $(arg track)
     </rosparam>
   </node>
 
   <!-- cutie node -->
   <node name="cutie_node"
         pkg="tracking_ros" type="cutie_node.py"
-        output="screen" >
+        output="screen" if="$(arg track)">
     <remap from="~input_image" to="$(arg input_image)" />
     <remap from="~input_segmentation" to="$(arg sam_output)/segmentation" />
+    <remap from="~process_prompt" to="$(arg cutie_prompt)" />
+    <remap from="~reset" to="$(arg reset_track)" />
     <rosparam subst_value="true" >
         device: $(arg device)
         with_bbox: $(arg with_bbox)

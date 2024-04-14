@@ -8,7 +8,7 @@ from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PointStamped, PolygonStamped
 from std_srvs.srv import Empty, EmptyResponse
-from tracking_ros_utils.srv import SamPrompt, SamPromptResponse
+from tracking_ros_utils.srv import SamPrompt, SamPromptResponse, CutiePrompt, CutiePromptRequest
 from jsk_topic_tools import ConnectionBasedTransport
 
 from segment_anything.utils.amg import remove_small_regions
@@ -23,6 +23,7 @@ class SAMNode(ConnectionBasedTransport):
         self.predictor = self.sam_config.get_predictor()
         self.interactive_mode = rospy.get_param("~interactive_mode", True)
         self.refine_mask = rospy.get_param("~refine_mask", False)
+        self.track = rospy.get_param("~track", False)
         if self.refine_mask:
             self.area_threshold = rospy.get_param("~area_threshold", 400)
             self.refine_mode = rospy.get_param("~refine_mode", "holes")  # "holes" or "islands"
@@ -67,6 +68,9 @@ class SAMNode(ConnectionBasedTransport):
             self.num_slots = rospy.get_param(
                 "~num_slots", -1
             )  # number of masks to generate automatically, in order of score
+
+        if self.track:
+            self.process_track = rospy.ServiceProxy("~process_track", CutiePrompt)
 
         self.bridge = CvBridge()
         self.pub_seg = self.advertise("~output/segmentation", Image, queue_size=1)
@@ -190,6 +194,14 @@ class SAMNode(ConnectionBasedTransport):
     def publish_mask_callback(self, srv):  # TODO
         rospy.loginfo("Publish SAM mask")
         self.publish_mask = not self.publish_mask
+        if self.track:
+            rospy.loginfo("Prompt tracking to tracking node")
+            try:
+                input_img_msg = self.bridge.cv2_to_imgmsg(self.image, encoding="rgb8")
+                input_seg_msg = self.bridge.cv2_to_imgmsg(self.mask.astype(np.int32), encoding="32SC1")
+                self.process_track(CutiePromptRequest(image=input_img_msg, segmentation=input_seg_msg))
+            except rospy.ServiceException as e:
+                rospy.logerr("Service call failed: {}".format(e))
         return EmptyResponse()
 
     def toggle_prompt_label_callback(self, srv):
