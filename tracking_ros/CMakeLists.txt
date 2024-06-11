@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
 # ------------------------------------------------------------------------------------
 add_custom_target(${PROJECT_NAME}_install_trained_data ALL COMMAND python$ENV{ROS_PYTHON_VERSION} ${PROJECT_SOURCE_DIR}/scripts/install_trained_data.py)
 
+# setup python modules
+catkin_python_setup()
+
 # Dynamic reconfigure setup
 generate_dynamic_reconfigure_options(
   cfg/GroundingDINO.cfg
@@ -34,10 +37,10 @@ catkin_generate_virtualenv(
   CHECK_VENV FALSE
 )
 
-# file(GLOB SCRIPT_PROGRAMS scripts/*.py)
-# catkin_install_python(
-#   PROGRAMS ${SCRIPT_PROGRAMS}
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/scripts/)
+file(GLOB SCRIPT_PROGRAMS scripts/*.py)
+catkin_install_python(
+  PROGRAMS ${SCRIPT_PROGRAMS}
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/scripts/)
 file(GLOB SCRIPTS_FILES node_scripts/*.py)
 catkin_install_python(
   PROGRAMS ${SCRIPTS_FILES}

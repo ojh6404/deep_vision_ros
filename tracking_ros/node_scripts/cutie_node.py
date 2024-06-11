@@ -2,18 +2,17 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
+import rospy
+import supervision as sv
 import torch
 import torch.nn.functional as F
-import supervision as sv
-
-import rospy
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from std_srvs.srv import Empty, EmptyResponse
 from tracking_ros_utils.srv import CutiePrompt, CutiePromptResponse
 
-from model_config import CutieConfig
-from utils import overlay_davis
+from tracking_ros.model_config import CutieConfig
+from tracking_ros.utils import overlay_davis
 
 BOX_ANNOTATOR = sv.BoxAnnotator()
 

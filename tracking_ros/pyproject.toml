@@ -9,7 +9,7 @@ exclude = "Cutie|VLPart|cfg"
 
 [tool.mypy]
 python_version = 3.9
-exclude = "Cutie|VLPart|cfg"
+exclude = "Cutie|VLPart|cfg|setup.py"
 show_error_codes = true
 warn_unused_ignores = false
 check_untyped_defs = true
@@ -27,7 +27,7 @@ module = [
        "sensor_msgs.msg",
        "geometry_msgs.msg",
        "jsk_recognition_msgs.msg",
-       "tracking_ros_utils.srv",
+       "tracking_ros_utils.*",
        "jsk_topic_tools",
        "jsk_data",
        "numpy",

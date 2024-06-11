@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import rospy
-import rosnode
 import subprocess
 
+import rosnode
+import rospy
 from dynamic_reconfigure.server import Server
+
 from tracking_ros.cfg import VLPartConfig as ServerConfig
 
 

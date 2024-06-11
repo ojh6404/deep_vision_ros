@@ -1,10 +1,11 @@
+import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import os
-import rospy
-import rospkg
-import torch
 from typing import List
+
+import rospkg
+import rospy
+import torch
 
 CKECKPOINT_ROOT = os.path.join(rospkg.RosPack().get_path("tracking_ros"), "trained_data")
 
@@ -50,23 +51,11 @@ class SAMConfig(ROSInferenceModelConfig):
         assert self.model_type in SAMConfig.model_checkpoints
         assert self.mode in ["prompt", "automatic"]
         if "hq" in self.model_type:
-            from segment_anything_hq import (
-                sam_model_registry,
-                SamAutomaticMaskGenerator,
-                SamPredictor,
-            )
+            from segment_anything_hq import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
         elif self.model_type == "vit_t":
-            from mobile_sam import (
-                sam_model_registry,
-                SamAutomaticMaskGenerator,
-                SamPredictor,
-            )
+            from mobile_sam import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
         else:
-            from segment_anything import (
-                sam_model_registry,
-                SamAutomaticMaskGenerator,
-                SamPredictor,
-            )
+            from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
         model = sam_model_registry[self.model_type[:5]](checkpoint=self.model_checkpoints[self.model_type])
         model.to(device=self.device).eval()
         return SamPredictor(model) if self.mode == "prompt" else SamAutomaticMaskGenerator(model)
@@ -89,13 +78,12 @@ class CutieConfig(ROSInferenceModelConfig):
     model_checkpoint = os.path.join(CKECKPOINT_ROOT, "cutie/cutie-base-mega.pth")
 
     def get_predictor(self):
-        from omegaconf import open_dict
         import hydra
-        from hydra import compose, initialize
-
-        from cutie.model.cutie import CUTIE
         from cutie.inference.inference_core import InferenceCore
         from cutie.inference.utils.args_utils import get_dataset_cfg
+        from cutie.model.cutie import CUTIE
+        from hydra import compose, initialize
+        from omegaconf import open_dict
 
         hydra.core.global_hydra.GlobalHydra.instance().clear()
         with torch.inference_mode():
@@ -133,10 +121,11 @@ class DEVAConfig(ROSInferenceModelConfig):
 
     def get_predictor(self):
         from argparse import ArgumentParser
-        from deva.model.network import DEVA
-        from deva.inference.inference_core import DEVAInferenceCore
-        from deva.inference.eval_args import add_common_eval_args
+
         from deva.ext.ext_eval_args import add_ext_eval_args, add_text_default_args
+        from deva.inference.eval_args import add_common_eval_args
+        from deva.inference.inference_core import DEVAInferenceCore
+        from deva.model.network import DEVA
 
         # default parameters
         parser = ArgumentParser()
@@ -194,9 +183,7 @@ class GroundingDINOConfig(ROSInferenceModelConfig):
         try:
             from groundingdino.util.inference import Model as GroundingDINOModel
         except ImportError:
-            from GroundingDINO.groundingdino.util.inference import (
-                Model as GroundingDINOModel,
-            )
+            from GroundingDINO.groundingdino.util.inference import Model as GroundingDINOModel
         return GroundingDINOModel(
             model_config_path=self.model_config,
             model_checkpoint_path=self.model_checkpoint,
@@ -323,14 +310,14 @@ class VLPartConfig(ROSInferenceModelConfig):
     def get_predictor(
         self, vocabulary: str = "custom", custom_vocabulary: List[str] = [], confidence_threshold: float = 0.7
     ):
+        import argparse
+        import sys
+
         from detectron2.config import get_cfg
 
-        import sys
-        import argparse
-
         sys.path.insert(0, self.model_root)
-        from vlpart.config import add_vlpart_config
         from demo.predictor import VisualizationDemo
+        from vlpart.config import add_vlpart_config
 
         def setup_cfg(args):
             # load config from file and command-line arguments

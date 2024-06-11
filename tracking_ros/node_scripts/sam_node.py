@@ -4,16 +4,15 @@
 import numpy as np
 import rospy
 from cv_bridge import CvBridge
-
-from sensor_msgs.msg import Image
 from geometry_msgs.msg import PointStamped, PolygonStamped
-from std_srvs.srv import Empty, EmptyResponse
-from tracking_ros_utils.srv import SamPrompt, SamPromptResponse, CutiePrompt, CutiePromptRequest
 from jsk_topic_tools import ConnectionBasedTransport
-
 from segment_anything.utils.amg import remove_small_regions
-from model_config import SAMConfig
-from utils import draw_prompt, overlay_davis
+from sensor_msgs.msg import Image
+from std_srvs.srv import Empty, EmptyResponse
+from tracking_ros.utils import draw_prompt, overlay_davis
+from tracking_ros_utils.srv import CutiePrompt, CutiePromptRequest, SamPrompt, SamPromptResponse
+
+from tracking_ros.model_config import SAMConfig
 
 
 class SAMNode(ConnectionBasedTransport):
@@ -198,7 +197,7 @@ class SAMNode(ConnectionBasedTransport):
             rospy.loginfo("Prompt tracking to tracking node")
             try:
                 input_img_msg = self.bridge.cv2_to_imgmsg(self.image, encoding="rgb8")
-                input_seg_msg = self.bridge.cv2_to_imgmsg(self.mask.astype(np.int32), encoding="32SC1")
+                input_seg_msg = self.bridge.cv2_to_imgmsg(self.mask.astype(np.int32), encoding="32SC1") # type: ignore
                 self.process_track(CutiePromptRequest(image=input_img_msg, segmentation=input_seg_msg))
             except rospy.ServiceException as e:
                 rospy.logerr("Service call failed: {}".format(e))

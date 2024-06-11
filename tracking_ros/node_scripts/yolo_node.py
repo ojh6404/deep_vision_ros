@@ -1,22 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import supervision as sv
 import numpy as np
 import rospy
-
+import supervision as sv
 from cv_bridge import CvBridge
 from dynamic_reconfigure.server import Server
-from sensor_msgs.msg import Image
+from jsk_recognition_msgs.msg import ClassificationResult, Label, LabelArray, Rect, RectArray
 from jsk_topic_tools import ConnectionBasedTransport
-from jsk_recognition_msgs.msg import Rect, RectArray
-from jsk_recognition_msgs.msg import Label, LabelArray
-from jsk_recognition_msgs.msg import ClassificationResult
-
 from segment_anything.utils.amg import remove_small_regions
+from sensor_msgs.msg import Image
+
 from tracking_ros.cfg import YOLOConfig as ServerConfig
-from model_config import YOLOConfig, SAMConfig
-from utils import overlay_davis
+from tracking_ros.model_config import SAMConfig, YOLOConfig
+from tracking_ros.utils import overlay_davis
 
 BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
 LABEL_ANNOTATOR = sv.LabelAnnotator()
@@ -114,7 +111,9 @@ class YOLONode(ConnectionBasedTransport):
     def callback(self, img_msg):
         if self.detect_flag:
             self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            results = self.predictor.predict(self.image, save=False, conf=self.box_threshold, iou=self.nms_threshold)[0]
+            results = self.predictor.predict(
+                self.image, save=False, conf=self.box_threshold, iou=self.nms_threshold, verbose=False
+            )[0]
             detections = sv.Detections.from_ultralytics(results)
 
             labels = [results.names[cls_id] for cls_id in detections.class_id]
