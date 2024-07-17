@@ -5,11 +5,11 @@ line_length = 120
 [tool.black]
 line-length = 120
 target-version = ["py38", "py39"]
-exclude = "Cutie|VLPart|cfg"
+exclude = "Cutie|VLPart|cfg|MaskDINO"
 
 [tool.mypy]
 python_version = 3.9
-exclude = "Cutie|VLPart|cfg"
+exclude = "Cutie|VLPart|cfg|MaskDINO"
 show_error_codes = true
 warn_unused_ignores = false
 check_untyped_defs = true

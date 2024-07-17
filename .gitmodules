@@ -4,3 +4,6 @@
 [submodule "tracking_ros/VLPart"]
 	path = tracking_ros/VLPart
 	url = https://github.com/facebookresearch/VLPart.git
+[submodule "tracking_ros/MaskDINO"]
+	path = tracking_ros/MaskDINO
+	url = https://github.com/IDEA-Research/MaskDINO.git

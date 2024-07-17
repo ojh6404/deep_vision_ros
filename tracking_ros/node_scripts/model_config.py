@@ -6,7 +6,7 @@ import rospkg
 import torch
 from typing import List
 
-CKECKPOINT_ROOT = os.path.join(rospkg.RosPack().get_path("tracking_ros"), "trained_data")
+CHECKPOINT_ROOT = os.path.join(rospkg.RosPack().get_path("tracking_ros"), "trained_data")
 
 
 @dataclass
@@ -35,7 +35,7 @@ class SAMConfig(ROSInferenceModelConfig):
     model_type: str = "vit_t"
     mode: str = "prompt"
 
-    model_checkpoint_root = os.path.join(CKECKPOINT_ROOT, "sam")
+    model_checkpoint_root = os.path.join(CHECKPOINT_ROOT, "sam")
     model_checkpoints = {
         "vit_t": os.path.join(model_checkpoint_root, "mobile_sam.pth"),
         "vit_b": os.path.join(model_checkpoint_root, "sam_vit_b.pth"),
@@ -86,7 +86,7 @@ class SAMConfig(ROSInferenceModelConfig):
 
 @dataclass
 class CutieConfig(ROSInferenceModelConfig):
-    model_checkpoint = os.path.join(CKECKPOINT_ROOT, "cutie/cutie-base-mega.pth")
+    model_checkpoint = os.path.join(CHECKPOINT_ROOT, "cutie/cutie-base-mega.pth")
 
     def get_predictor(self):
         from omegaconf import open_dict
@@ -129,7 +129,7 @@ class CutieConfig(ROSInferenceModelConfig):
 
 @dataclass
 class DEVAConfig(ROSInferenceModelConfig):
-    model_checkpoint = os.path.join(CKECKPOINT_ROOT, "deva/DEVA-propagation.pth")
+    model_checkpoint = os.path.join(CHECKPOINT_ROOT, "deva/DEVA-propagation.pth")
 
     def get_predictor(self):
         from argparse import ArgumentParser
@@ -187,8 +187,8 @@ class DEVAConfig(ROSInferenceModelConfig):
 
 @dataclass
 class GroundingDINOConfig(ROSInferenceModelConfig):
-    model_config = os.path.join(CKECKPOINT_ROOT, "groundingdino/GroundingDINO_SwinT_OGC.py")
-    model_checkpoint = os.path.join(CKECKPOINT_ROOT, "groundingdino/groundingdino_swint_ogc.pth")
+    model_config = os.path.join(CHECKPOINT_ROOT, "groundingdino/GroundingDINO_SwinT_OGC.py")
+    model_checkpoint = os.path.join(CHECKPOINT_ROOT, "groundingdino/groundingdino_swint_ogc.pth")
 
     def get_predictor(self):
         try:
@@ -238,9 +238,8 @@ class YOLOConfig(ROSInferenceModelConfig):
 @dataclass
 class VLPartConfig(ROSInferenceModelConfig):
     model_type: str = "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed"
-    mode: str = "prompt"
     model_root = rospkg.RosPack().get_path("tracking_ros") + "/VLPart"
-    model_checkpoint_root = os.path.join(CKECKPOINT_ROOT, "vlpart")
+    model_checkpoint_root = os.path.join(CHECKPOINT_ROOT, "vlpart")
     model_checkpoints = {
         "r50_voc": os.path.join(model_checkpoint_root, "r50_voc.pth"),
         "r50_coco": os.path.join(model_checkpoint_root, "r50_coco.pth"),
@@ -270,13 +269,16 @@ class VLPartConfig(ROSInferenceModelConfig):
             model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart.pth"
         ),
         "swinbase_cascade_lvis_paco_pascalpart_partimagenet": os.path.join(
-            model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet.pth"
+            model_checkpoint_root,
+            "swinbase_cascade_lvis_paco_pascalpart_partimagenet.pth",
         ),
         "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in": os.path.join(
-            model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.pth"
+            model_checkpoint_root,
+            "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.pth",
         ),
         "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed": os.path.join(
-            model_checkpoint_root, "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.pth"
+            model_checkpoint_root,
+            "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.pth",
         ),
     }
     model_configs = {
@@ -295,7 +297,8 @@ class VLPartConfig(ROSInferenceModelConfig):
             model_root, "configs/joint_in/r50_lvis_paco_pascalpart_partimagenet_in.yaml"
         ),
         "r50_lvis_paco_pascalpart_partimagenet_inparsed": os.path.join(
-            model_root, "configs/joint_in/r50_lvis_paco_pascalpart_partimagenet_inparsed.yaml"
+            model_root,
+            "configs/joint_in/r50_lvis_paco_pascalpart_partimagenet_inparsed.yaml",
         ),
         "swinbase_cascade_voc": os.path.join(model_root, "configs/voc/swinbase_cascade_voc.yaml"),
         "swinbase_cascade_coco": os.path.join(model_root, "configs/coco/swinbase_cascade_coco.yaml"),
@@ -310,18 +313,24 @@ class VLPartConfig(ROSInferenceModelConfig):
             model_root, "configs/joint/swinbase_cascade_lvis_paco_pascalpart.yaml"
         ),
         "swinbase_cascade_lvis_paco_pascalpart_partimagenet": os.path.join(
-            model_root, "configs/joint/swinbase_cascade_lvis_paco_pascalpart_partimagenet.yaml"
+            model_root,
+            "configs/joint/swinbase_cascade_lvis_paco_pascalpart_partimagenet.yaml",
         ),
         "swinbase_cascade_lvis_paco_pascalpart_partimagenet_in": os.path.join(
-            model_root, "configs/joint_in/swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.yaml"
+            model_root,
+            "configs/joint_in/swinbase_cascade_lvis_paco_pascalpart_partimagenet_in.yaml",
         ),
         "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed": os.path.join(
-            model_root, "configs/joint_in/swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.yaml"
+            model_root,
+            "configs/joint_in/swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed.yaml",
         ),
     }
 
     def get_predictor(
-        self, vocabulary: str = "custom", custom_vocabulary: List[str] = [], confidence_threshold: float = 0.7
+        self,
+        vocabulary: str = "custom",
+        custom_vocabulary: List[str] = [],
+        confidence_threshold: float = 0.7,
     ):
         from detectron2.config import get_cfg
 
@@ -362,7 +371,12 @@ class VLPartConfig(ROSInferenceModelConfig):
             "vocabulary": vocabulary,
             "custom_vocabulary": custom_vocabulary,
             "confidence_threshold": confidence_threshold,
-            "opts": ["MODEL.WEIGHTS", self.model_checkpoints[self.model_type], "VIS.BOX", "False"],
+            "opts": [
+                "MODEL.WEIGHTS",
+                self.model_checkpoints[self.model_type],
+                "VIS.BOX",
+                "False",
+            ],
         }
         print(args)
 
@@ -379,3 +393,121 @@ class VLPartConfig(ROSInferenceModelConfig):
     @classmethod
     def from_rosparam(cls):
         return cls.from_args(rospy.get_param("~device", "cuda:0"))
+
+
+@dataclass
+class MaskDINOConfig(ROSInferenceModelConfig):
+    model_type: str = "panoptic_swinl"
+    model_root = rospkg.RosPack().get_path("tracking_ros") + "/MaskDINO"
+    model_checkpoint_root = os.path.join(CHECKPOINT_ROOT, "MaskDINO")
+    model_checkpoints = {
+        "instance_r50_hid1024": os.path.join(
+            model_checkpoint_root,
+            "instance/maskdino_r50_50ep_300q_hid1024_3sd1_instance_maskenhanced_mask46.1ap_box51.5ap.pth",
+        ),
+        "instance_r50": os.path.join(
+            model_checkpoint_root,
+            "instance/maskdino_r50_50ep_300q_hid2048_3sd1_instance_maskenhanced_mask46.3ap_box51.7ap.pth",
+        ),
+        "instance_swinl_no_mask_enhanced": os.path.join(
+            model_checkpoint_root,
+            "instance/maskdino_swinl_50ep_300q_hid2048_3sd1_instance_mask52.1ap_box58.3ap.pth",
+        ),
+        "instance_swinl": os.path.join(
+            model_checkpoint_root,
+            "instance/maskdino_swinl_50ep_300q_hid2048_3sd1_instance_maskenhanced_mask52.3ap_box59.0ap.pth",
+        ),
+        "panoptic_r50": os.path.join(
+            model_checkpoint_root,
+            "panoptic/maskdino_r50_50ep_300q_hid2048_3sd1_panoptic_pq53.0.pth",
+        ),
+        "panoptic_swinl": os.path.join(
+            model_checkpoint_root,
+            "panoptic/maskdino_swinl_50ep_300q_hid2048_3sd1_panoptic_58.3pq.pth",
+        ),
+        "semantic_r50_ade20k": os.path.join(
+            model_checkpoint_root,
+            "semantic/maskdino_r50_50ep_100q_celoss_hid1024_3s_semantic_ade20k_48.7miou.pth",
+        ),
+        "semantic_r50_cityscapes": os.path.join(
+            model_checkpoint_root,
+            "semantic/maskdino_r50_50ep_100q_celoss_hid1024_3s_semantic_cityscapes_79.8miou.pth",
+        ),
+    }
+    model_configs = {
+        "instance_r50_hid1024": os.path.join(
+            model_root,
+            "configs/coco/instance-segmentation/maskdino_R50_bs16_50ep_3s.yaml",
+        ),
+        "instance_r50": os.path.join(
+            model_root,
+            "configs/coco/instance-segmentation/maskdino_R50_bs16_50ep_3s_dowsample1_2048.yaml",
+        ),
+        "instance_swinl_no_mask_enhanced": os.path.join(
+            model_root,
+            "configs/coco/instance-segmentation/swin/maskdino_R50_bs16_50ep_4s_dowsample1_2048.yaml",
+        ),
+        "instance_swinl": os.path.join(
+            model_root,
+            "configs/coco/instance-segmentation/swin/maskdino_R50_bs16_50ep_4s_dowsample1_2048.yaml",
+        ),
+        "panoptic_r50": os.path.join(
+            model_root,
+            "configs/coco/panoptic-segmentation/maskdino_R50_bs16_50ep_3s_dowsample1_2048.yaml",
+        ),
+        "panoptic_swinl": os.path.join(
+            model_root,
+            "configs/coco/panoptic-segmentation/swin/maskdino_R50_bs16_50ep_4s_dowsample1_2048.yaml",
+        ),
+        "semantic_r50_ade20k": os.path.join(
+            model_root,
+            "configs/ade20k/semantic-segmentation/maskdino_R50_bs16_160k_steplr.yaml",
+        ),
+        "semantic_r50_cityscapes": os.path.join(
+            model_root,
+            "configs/cityscapes/semantic-segmentation/maskdino_R50_bs16_90k_steplr.yaml",
+        ),
+    }
+
+    def get_predictor(self, confidence_threshold: float = 0.7):
+        import argparse
+        import sys
+
+        sys.path.insert(0, self.model_root)
+        sys.path.insert(0, os.path.join(self.model_root, "demo"))
+        from detectron2.config import get_cfg
+        from detectron2.projects.deeplab import add_deeplab_config
+        from maskdino import add_maskdino_config
+        from predictor import VisualizationDemo
+
+        def setup_cfg(args):
+            # load config from file and command-line arguments
+            cfg = get_cfg()
+            add_deeplab_config(cfg)
+            add_maskdino_config(cfg)
+            cfg.merge_from_file(args.config_file)
+            cfg.merge_from_list(args.opts)
+            cfg.freeze()
+            return cfg
+
+        args = {
+            "config_file": self.model_configs[self.model_type],
+            "confidence_threshold": confidence_threshold,
+            "opts": ["MODEL.WEIGHTS", self.model_checkpoints[self.model_type]],
+        }
+
+        args = argparse.Namespace(**args)  # type: ignore
+        cfg = setup_cfg(args)
+        demo = VisualizationDemo(cfg)
+        return demo
+
+    @classmethod
+    def from_args(cls, model_type: str = "panoptic_swinl", device: str = "cuda:0"):
+        return cls(model_name="MaskDINO", model_type=model_type, device=device)
+
+    @classmethod
+    def from_rosparam(cls):
+        return cls.from_args(
+            rospy.get_param("~model_type", "panoptic_swinl"),
+            rospy.get_param("~device", "cuda:0"),
+        )

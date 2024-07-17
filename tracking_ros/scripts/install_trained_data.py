@@ -238,6 +238,61 @@ def main():
         md5="c2b4865ad03db1cf00d5da921a72c5de",
     )
 
+    # MaskDINO
+    # instance segmentation and object detection
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/instance/maskdino_r50_50ep_300q_hid1024_3sd1_instance_maskenhanced_mask46.1ap_box51.5ap.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_r50_50ep_300q_hid1024_3sd1_instance_maskenhanced_mask46.1ap_box51.5ap.pth",
+        md5="0542c05ce5eef21d7073e421cec3bf16",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/instance/maskdino_r50_50ep_300q_hid2048_3sd1_instance_maskenhanced_mask46.3ap_box51.7ap.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_r50_50ep_300q_hid2048_3sd1_instance_maskenhanced_mask46.3ap_box51.7ap.pth",
+        md5="443a397e48f2901f115d514695c27097",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/instance/maskdino_swinl_50ep_300q_hid2048_3sd1_instance_mask52.1ap_box58.3ap.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_swinl_50ep_300q_hid2048_3sd1_instance_mask52.1ap_box58.3ap.pth",
+        md5="af112f2b59607b95bbbc7b285efb561d",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/instance/maskdino_swinl_50ep_300q_hid2048_3sd1_instance_maskenhanced_mask52.3ap_box59.0ap.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_swinl_50ep_300q_hid2048_3sd1_instance_maskenhanced_mask52.3ap_box59.0ap.pth",
+        md5="05307c4356d20a258fdd96a8dade61b1",
+    )
+
+    # semantic segmentation
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/semantic/maskdino_r50_50ep_100q_celoss_hid1024_3s_semantic_ade20k_48.7miou.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_r50_50ep_100q_celoss_hid1024_3s_semantic_ade20k_48.7miou.pth",
+        md5="2b89bb1950174eaff27c8acfa6203efe",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/semantic/maskdino_r50_50ep_100q_celoss_hid1024_3s_semantic_cityscapes_79.8miou.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_r50_50ep_100q_celoss_hid1024_3s_semantic_cityscapes_79.8miou.pth",
+        md5="8debe34409d4a9ca1add8ba72b311397",
+    )
+
+    # panoptic segmentation
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/panoptic/maskdino_r50_50ep_300q_hid2048_3sd1_panoptic_pq53.0.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_r50_50ep_300q_hid2048_3sd1_panoptic_pq53.0.pth",
+        md5="1cbe19c16f4aacd64431e01c2b076ce8",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/MaskDINO/panoptic/maskdino_swinl_50ep_300q_hid2048_3sd1_panoptic_58.3pq.pth",
+        url="https://github.com/IDEA-Research/detrex-storage/releases/download/maskdino-v0.1.0/maskdino_swinl_50ep_300q_hid2048_3sd1_panoptic_58.3pq.pth",
+        md5="7f5c513abf9d42aba6e04e428bc8baac",
+    )
+
 
 if __name__ == "__main__":
     main()

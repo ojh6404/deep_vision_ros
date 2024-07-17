@@ -12,6 +12,7 @@ scikit-image>=0.19.0
 scikit-learn>=0.24.0
 packaging>=21
 rsa<4.8,>=3.1.2
+scipy
 gdown
 gitpython
 hickle
@@ -37,6 +38,8 @@ ftfy
 regex
 lvis
 nltk
+shapely
+submitit
 ultralytics
 segment-anything
 segment-anything-hq
@@ -47,3 +50,5 @@ git+https://github.com/hkchengrex/Grounded-Segment-Anything.git#egg=groundingdin
 git+https://github.com/hkchengrex/Tracking-Anything-with-DEVA.git
 git+https://github.com/openai/CLIP.git
 git+https://github.com/facebookresearch/detectron2.git
+git+https://github.com/cocodataset/panopticapi.git
+git+https://github.com/mcordts/cityscapesScripts.git
