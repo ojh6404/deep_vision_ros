@@ -1,4 +1,4 @@
-ARG CUDA_VERSION=11.3 # or 12.1
+ARG CUDA_VERSION=12.1 # or 12.1
 FROM nvidia/cuda:${CUDA_VERSION}.1-devel-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm /etc/apt/sources.list.d/cuda.list
