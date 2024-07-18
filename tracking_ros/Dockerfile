@@ -19,7 +19,13 @@ RUN apt update && apt install -q -y --no-install-recommends \
     sudo \
     git \
     lsb-release \
+    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
+
+# get latest cmake
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+RUN add-apt-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+RUN apt-get update && apt-get install -y cmake
 
 RUN \
   useradd user && \

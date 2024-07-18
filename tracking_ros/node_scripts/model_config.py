@@ -378,7 +378,6 @@ class VLPartConfig(ROSInferenceModelConfig):
                 "False",
             ],
         }
-        print(args)
 
         args = argparse.Namespace(**args)  # type: ignore
         cfg = setup_cfg(args)
@@ -504,6 +503,251 @@ class MaskDINOConfig(ROSInferenceModelConfig):
     @classmethod
     def from_args(cls, model_type: str = "panoptic_swinl", device: str = "cuda:0"):
         return cls(model_name="MaskDINO", model_type=model_type, device=device)
+
+    @classmethod
+    def from_rosparam(cls):
+        return cls.from_args(
+            rospy.get_param("~model_type", "panoptic_swinl"),
+            rospy.get_param("~device", "cuda:0"),
+        )
+
+
+@dataclass
+class OneFormerConfig(ROSInferenceModelConfig):
+    model_type: str = "ade20k_swinl_640"
+    model_root = rospkg.RosPack().get_path("tracking_ros") + "/OneFormer"
+    model_checkpoint_root = os.path.join(CHECKPOINT_ROOT, "OneFormer")
+    model_checkpoints = {
+        "ade20k_swinl_640": os.path.join(
+            model_checkpoint_root,
+            "ade20k/250_16_swin_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_swinl_896": os.path.join(
+            model_checkpoint_root,
+            "ade20k/896x896_250_16_swin_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_swinl_1280": os.path.join(
+            model_checkpoint_root,
+            "ade20k/1280x1280_250_16_swin_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_dinat_l_640": os.path.join(
+            model_checkpoint_root,
+            "ade20k/250_16_dinat_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_dinat_l_896": os.path.join(
+            model_checkpoint_root,
+            "ade20k/896x896_250_16_dinat_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_dinat_l_1280": os.path.join(
+            model_checkpoint_root,
+            "ade20k/1280x1280_250_16_dinat_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_dinat_l_1280_coco_pretrain": os.path.join(
+            model_checkpoint_root,
+            "ade20k/coco_pretrain_1280x1280_150_16_dinat_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_convnext_l_640": os.path.join(
+            model_checkpoint_root,
+            "ade20k/250_16_convnext_l_oneformer_ade20k_160k.pth",
+        ),
+        "ade20k_convnext_xl_640": os.path.join(
+            model_checkpoint_root,
+            "ade20k/250_16_convnext_xl_oneformer_ade20k_160k.pth",
+        ),
+        "cityscapes_swinl": os.path.join(
+            model_checkpoint_root,
+            "cityscapes/250_16_swin_l_oneformer_cityscapes_90k.pth",
+        ),
+        "cityscapes_convnext_l": os.path.join(
+            model_checkpoint_root,
+            "cityscapes/250_16_convnext_l_oneformer_cityscapes_90k.pth",
+        ),
+        "cityscapes_convnext_l_mapillary_pretrain": os.path.join(
+            model_checkpoint_root,
+            "cityscapes/mapillary_pretrain_250_16_convnext_l_oneformer_cityscapes_90k.pth",
+        ),
+        "cityscapes_dinat_l": os.path.join(
+            model_checkpoint_root,
+            "cityscapes/250_16_dinat_l_oneformer_cityscapes_90k.pth",
+        ),
+        "cityscapes_convnext_xl": os.path.join(
+            model_checkpoint_root,
+            "cityscapes/250_16_convnext_xl_oneformer_cityscapes_90k.pth",
+        ),
+        "cityscapes_convnext_xl_mapillary_pretrain": os.path.join(
+            model_checkpoint_root,
+            "cityscapes/mapillary_pretrain_250_16_convnext_xl_oneformer_cityscapes_90k.pth",
+        ),
+        "coco_swinl": os.path.join(
+            model_checkpoint_root,
+            "coco/150_16_swin_l_oneformer_coco_100ep.pth",
+        ),
+        "coco_dinat_l": os.path.join(
+            model_checkpoint_root,
+            "coco/150_16_dinat_l_oneformer_coco_100ep.pth",
+        ),
+        "mapillary_swinl": os.path.join(
+            model_checkpoint_root,
+            "mapillary/250_16_swin_l_oneformer_mapillary_300k.pth",
+        ),
+        "mapillary_convnext_l": os.path.join(
+            model_checkpoint_root,
+            "mapillary/250_16_convnext_l_oneformer_mapillary_300k.pth",
+        ),
+        "mapillary_dinat_l": os.path.join(
+            model_checkpoint_root,
+            "mapillary/250_16_dinat_l_oneformer_mapillary_300k.pth",
+        ),
+    }
+    model_configs = {
+        "ade20k_swinl_640": os.path.join(
+            model_root,
+            "configs/ade20k/swin/oneformer_swin_large_bs16_160k.yaml",
+        ),
+        "ade20k_swinl_896": os.path.join(
+            model_root,
+            "configs/ade20k/swin/oneformer_swin_large_bs16_160k_896x896.yaml",
+        ),
+        "ade20k_swinl_1280": os.path.join(
+            model_root,
+            "configs/ade20k/swin/oneformer_swin_large_bs16_160k_1280x1280.yaml",
+        ),
+        "ade20k_dinat_l_640": os.path.join(
+            model_root,
+            "configs/ade20k/dinat/oneformer_dinat_large_bs16_160k.yaml",
+        ),
+        "ade20k_dinat_l_896": os.path.join(
+            model_root,
+            "configs/ade20k/dinat/oneformer_dinat_large_bs16_160k_896x896.yaml",
+        ),
+        "ade20k_dinat_l_1280": os.path.join(
+            model_root,
+            "configs/ade20k/dinat/oneformer_dinat_large_bs16_160k_1280x1280.yaml",
+        ),
+        "ade20k_dinat_l_1280_coco_pretrain": os.path.join(
+            model_root,
+            "configs/ade20k/dinat/coco_pretrain_oneformer_dinat_large_bs16_160k_1280x1280.yaml",
+        ),
+        "ade20k_convnext_l_640": os.path.join(
+            model_root,
+            "configs/ade20k/convnext/oneformer_convnext_large_bs16_160k.yaml",
+        ),
+        "ade20k_convnext_xl_640": os.path.join(
+            model_root,
+            "configs/ade20k/convnext/oneformer_convnext_xlarge_bs16_160k.yaml",
+        ),
+        "cityscapes_swinl": os.path.join(
+            model_root,
+            "configs/cityscapes/swin/oneformer_swin_large_bs16_90k.yaml",
+        ),
+        "cityscapes_convnext_l": os.path.join(
+            model_root,
+            "configs/cityscapes/convnext/oneformer_convnext_large_bs16_90k.yaml",
+        ),
+        "cityscapes_convnext_l_mapillary_pretrain": os.path.join(
+            model_root,
+            "configs/cityscapes/convnext/mapillary_pretrain_oneformer_convnext_large_bs16_90k.yaml",
+        ),
+        "cityscapes_dinat_l": os.path.join(
+            model_root,
+            "configs/cityscapes/dinat/oneformer_dinat_large_bs16_90k.yaml",
+        ),
+        "cityscapes_convnext_xl": os.path.join(
+            model_root,
+            "configs/cityscapes/convnext/oneformer_convnext_xlarge_bs16_90k.yaml",
+        ),
+        "cityscapes_convnext_xl_mapillary_pretrain": os.path.join(
+            model_root,
+            "configs/cityscapes/convnext/mapillary_pretrain_oneformer_convnext_xlarge_bs16_90k.yaml",
+        ),
+        "coco_swinl": os.path.join(
+            model_root,
+            "configs/coco/swin/oneformer_swin_large_bs16_100ep.yaml",
+        ),
+        "coco_dinat_l": os.path.join(
+            model_root,
+            "configs/coco/dinat/oneformer_dinat_large_bs16_100ep.yaml",
+        ),
+        "mapillary_swinl": os.path.join(
+            model_root,
+            "configs/mapillary_vistas/swin/oneformer_swin_large_bs16_300k.yaml",
+        ),
+        "mapillary_convnext_l": os.path.join(
+            model_root,
+            "configs/mapillary_vistas/convnext/oneformer_convnext_large_bs16_300k.yaml",
+        ),
+        "mapillary_dinat_l": os.path.join(
+            model_root,
+            "configs/mapillary_vistas/dinat/oneformer_dinat_large_bs16_300k.yaml",
+        ),
+    }
+
+    def get_predictor(self, task: str = "panoptic", confidence_threshold: float = 0.7):
+        import argparse
+        import torch
+        import numpy as np
+        import random
+        import sys
+
+        sys.path.insert(0, self.model_root)
+        sys.path.insert(0, os.path.join(self.model_root, "demo"))
+
+        from detectron2.config import get_cfg
+        from detectron2.projects.deeplab import add_deeplab_config
+
+        from oneformer import (
+            add_oneformer_config,
+            add_common_config,
+            add_swin_config,
+            add_dinat_config,
+            add_convnext_config,
+        )
+        from predictor import VisualizationDemo
+
+        def setup_cfg(args):
+            # load config from file and command-line arguments
+            cfg = get_cfg()
+            add_deeplab_config(cfg)
+            add_common_config(cfg)
+            add_swin_config(cfg)
+            add_dinat_config(cfg)
+            add_convnext_config(cfg)
+            add_oneformer_config(cfg)
+            cfg.merge_from_file(args.config_file)
+            cfg.merge_from_list(args.opts)
+            cfg.freeze()
+            return cfg
+
+        seed = 0
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+        args = {
+            "config_file": self.model_configs[self.model_type],
+            "confidence_threshold": confidence_threshold,
+            "task": task,
+            "opts": [
+                "MODEL.IS_TRAIN",
+                "False",
+                "MODEL.IS_DEMO",
+                "True",
+                "MODEL.WEIGHTS",
+                self.model_checkpoints[self.model_type],
+            ],
+        }
+
+        args = argparse.Namespace(**args)  # type: ignore
+        cfg = setup_cfg(args)
+        demo = VisualizationDemo(cfg)
+        return demo
+
+    @classmethod
+    def from_args(cls, model_type: str = "panoptic_swinl", device: str = "cuda:0"):
+        return cls(model_name="OneFormer", model_type=model_type, device=device)
 
     @classmethod
     def from_rosparam(cls):

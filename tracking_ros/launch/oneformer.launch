@@ -1,0 +1,21 @@
+<launch>
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="model_type" default="ade20k_swinl_640" /> <!-- panoptic_swinl, panotpic_r50, ... -->
+  <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
+  <arg name="task" default="panoptic" /> <!-- cpu or cuda -->
+  <arg name="confidence_threshold" default="0.5" /> <!-- confidence threshold -->
+
+  <!-- oneformer node -->
+  <node name="oneformer_node"
+          pkg="tracking_ros" type="oneformer_node.py"
+          output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <rosparam subst_value="true" >
+        model_type: $(arg model_type)
+        task: $(arg task)
+        confidence_threshold: $(arg confidence_threshold)
+        device: $(arg device)
+    </rosparam>
+  </node>
+
+</launch>

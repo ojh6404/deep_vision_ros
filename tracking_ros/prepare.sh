@@ -12,5 +12,5 @@ else
     echo "CUDA_VERSION: ${CUDA_VERSION} is not set or supported. Please check your CUDA_VERSION environment variable is set properly like 11.3.1 or 12.1.1"
 fi
 
-# MaskDINO
+# MaskDINO && OneFormer
 cd MaskDINO/maskdino/modeling/pixel_decoder/ops && python3.9 setup.py build install --user && cd ../../../../

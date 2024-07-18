@@ -293,6 +293,135 @@ def main():
         md5="7f5c513abf9d42aba6e04e428bc8baac",
     )
 
+    # OneFormer
+    # ADE20K
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/250_16_swin_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/250_16_swin_l_oneformer_ade20k_160k.pth",
+        md5="0621b4c08b7ccd34004e71c14d2765d7",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/896x896_250_16_swin_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/896x896_250_16_swin_l_oneformer_ade20k_160k.pth",
+        md5="13f323987e60357aacb31024bdceb751",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/1280x1280_250_16_swin_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/1280x1280_250_16_swin_l_oneformer_ade20k_160k.pth",
+        md5="26d9ff04b29bff9cad14bebcbe32bd75",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/250_16_convnext_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/250_16_convnext_l_oneformer_ade20k_160k.pth",
+        md5="efe9472bcff45b69079ed4148cc00e1c",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/250_16_dinat_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/250_16_dinat_l_oneformer_ade20k_160k.pth",
+        md5="36d47ad7d9d12a9a271bb13d716f8ee6",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/896x896_250_16_dinat_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/896x896_250_16_dinat_l_oneformer_ade20k_160k.pth",
+        md5="7e1d8e53f307bc423c4e0518bab625e6",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/1280x1280_250_16_dinat_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/1280x1280_250_16_dinat_l_oneformer_ade20k_160k.pth",
+        md5="288aab3cc897c39827824509e46e51e1",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/coco_pretrain_1280x1280_150_16_dinat_l_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/coco_pretrain_1280x1280_150_16_dinat_l_oneformer_ade20k_160k.pth",
+        md5="994d0bf7c7909bd78c60e1bc25b90302",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/ade20k/250_16_convnext_xl_oneformer_ade20k_160k.pth",
+        url="https://shi-labs.com/projects/oneformer/ade20k/250_16_convnext_xl_oneformer_ade20k_160k.pth",
+        md5="d1f55acd992504786654550261130487",
+    )
+
+    # Cityscapes
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/cityscapes/250_16_swin_l_oneformer_cityscapes_90k.pth",
+        url="https://shi-labs.com/projects/oneformer/cityscapes/250_16_swin_l_oneformer_cityscapes_90k.pth",
+        md5="356b2ae2d52e32ccf39b25c47c044503",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/cityscapes/250_16_convnext_l_oneformer_cityscapes_90k.pth",
+        url="https://shi-labs.com/projects/oneformer/cityscapes/250_16_convnext_l_oneformer_cityscapes_90k.pth",
+        md5="54aff774f23954399708859d63323b28",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/cityscapes/mapillary_pretrain_250_16_convnext_l_oneformer_cityscapes_90k.pth",
+        url="https://shi-labs.com/projects/oneformer/cityscapes/mapillary_pretrain_250_16_convnext_l_oneformer_cityscapes_90k.pth",
+        md5="791165a275fe71fe52e2d51c358e1907",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/cityscapes/250_16_dinat_l_oneformer_cityscapes_90k.pth",
+        url="https://shi-labs.com/projects/oneformer/cityscapes/250_16_dinat_l_oneformer_cityscapes_90k.pth",
+        md5="b4df7721bac0b4971c88e95079e44714",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/cityscapes/250_16_convnext_xl_oneformer_cityscapes_90k.pth",
+        url="https://shi-labs.com/projects/oneformer/cityscapes/250_16_convnext_xl_oneformer_cityscapes_90k.pth",
+        md5="c800e676674857da2a8e59c03aa5a27d",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/cityscapes/mapillary_pretrain_250_16_convnext_xl_oneformer_cityscapes_90k.pth",
+        url="https://shi-labs.com/projects/oneformer/cityscapes/mapillary_pretrain_250_16_convnext_xl_oneformer_cityscapes_90k.pth",
+        md5="a7bca52cff480aedace71a1dccb8f794",
+    )
+
+    # COCO
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/coco/150_16_swin_l_oneformer_coco_100ep.pth",
+        url="https://shi-labs.com/projects/oneformer/coco/150_16_swin_l_oneformer_coco_100ep.pth",
+        md5="db975d7a4b42ba29f63e64921ec96240",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/coco/150_16_dinat_l_oneformer_coco_100ep.pth",
+        url="https://shi-labs.com/projects/oneformer/coco/150_16_dinat_l_oneformer_coco_100ep.pth",
+        md5="91610efcf17b14776ae6dc10ee4b0642",
+    )
+
+    # Mapillary Vistas
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/mapillary/250_16_swin_l_oneformer_mapillary_300k.pth",
+        url="https://shi-labs.com/projects/oneformer/mapillary/250_16_swin_l_oneformer_mapillary_300k.pth",
+        md5="add55dbe4f0fce3a26a565d54123ecd7",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/mapillary/250_16_convnext_l_oneformer_mapillary_300k.pth",
+        url="https://shi-labs.com/projects/oneformer/mapillary/250_16_convnext_l_oneformer_mapillary_300k.pth",
+        md5="617f1627a76d069757af3d507e23a265",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/OneFormer/mapillary/250_16_dinat_l_oneformer_mapillary_300k.pth",
+        url="https://shi-labs.com/projects/oneformer/mapillary/250_16_dinat_l_oneformer_mapillary_300k.pth",
+        md5="691a6e7e4243cc58b6fa497f2107b735",
+    )
+
 
 if __name__ == "__main__":
     main()

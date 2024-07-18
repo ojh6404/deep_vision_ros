@@ -7,3 +7,6 @@
 [submodule "tracking_ros/MaskDINO"]
 	path = tracking_ros/MaskDINO
 	url = https://github.com/IDEA-Research/MaskDINO.git
+[submodule "tracking_ros/OneFormer"]
+	path = tracking_ros/OneFormer
+	url = https://github.com/SHI-Labs/OneFormer.git
