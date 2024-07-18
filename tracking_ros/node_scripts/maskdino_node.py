@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import cv2
 import supervision as sv
 import rospy
 
@@ -19,7 +18,6 @@ from model_config import MaskDINOConfig
 class MaskDINONode(ConnectionBasedTransport):
     def __init__(self):
         super(MaskDINONode, self).__init__()
-        # self.reconfigure_server = Server(ServerConfig, self.config_cb)
         self.confidence_threshold = rospy.get_param("~confidence_threshold", 0.7)
         self.initialize()
 
@@ -91,7 +89,7 @@ class MaskDINONode(ConnectionBasedTransport):
             self.pub_rects.publish(rect_array)
 
         if vis is not None:
-            vis_img_msg = self.bridge.cv2_to_imgmsg(vis, encoding="rgb8")
+            vis_img_msg = self.bridge.cv2_to_imgmsg(vis, encoding="bgr8")
             vis_img_msg.header.stamp = rospy.Time.now()
             vis_img_msg.header.frame_id = frame_id
             self.pub_vis_img.publish(vis_img_msg)
@@ -112,7 +110,7 @@ class MaskDINONode(ConnectionBasedTransport):
             scores = None
 
             predictions, visualized_output = self.predictor.run_on_image(self.image)
-            visualization = cv2.cvtColor(visualized_output.get_image(), cv2.COLOR_RGB2BGR)
+            visualization = visualized_output.get_image()
 
             if "panoptic_seg" in predictions:  # when panoptic segmentation
                 panoptic_seg, segments_info = predictions["panoptic_seg"]
