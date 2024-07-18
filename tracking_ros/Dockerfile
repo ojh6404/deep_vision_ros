@@ -98,6 +98,7 @@ ENV PATH="$PATH:$HOME/.local/bin"
 # Installing catkin package
 RUN mkdir -p ~/tracking_ws/src
 RUN sudo rosdep init && rosdep update && sudo apt update
+RUN git config --global http.version HTTP/1.1
 RUN git clone https://github.com/ojh6404/tracking_ros.git ~/tracking_ws/src
 RUN cd ~/tracking_ws/src/ &&\
     source /opt/ros/noetic/setup.bash &&\
