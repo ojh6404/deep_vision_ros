@@ -14,8 +14,8 @@ from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
 from tracking_ros_utils.srv import SamPrompt, SamPromptRequest
 
-from model_config import SAMConfig, VLPartConfig
-from utils import overlay_davis
+from tracking_ros.model_config import SAMConfig, VLPartConfig
+from tracking_ros.utils import overlay_davis
 
 # from dynamic_reconfigure.server import Server
 # from tracking_ros.cfg import VLPartConfig as ServerConfig

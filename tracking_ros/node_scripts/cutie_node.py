@@ -12,8 +12,8 @@ from sensor_msgs.msg import Image
 from std_srvs.srv import Empty, EmptyResponse
 from tracking_ros_utils.srv import CutiePrompt, CutiePromptResponse
 
-from model_config import CutieConfig
-from utils import overlay_davis
+from tracking_ros.model_config import CutieConfig
+from tracking_ros.utils import overlay_davis
 
 BOX_ANNOTATOR = sv.BoxAnnotator()
 

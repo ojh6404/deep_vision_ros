@@ -18,8 +18,8 @@ from tracking_ros_utils.srv import SamPrompt, SamPromptRequest
 
 from segment_anything.utils.amg import remove_small_regions
 from tracking_ros.cfg import GroundingDINOConfig as ServerConfig
-from model_config import GroundingDINOConfig, SAMConfig
-from utils import overlay_davis
+from tracking_ros.model_config import GroundingDINOConfig, SAMConfig
+from tracking_ros.utils import overlay_davis
 
 BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
 LABEL_ANNOTATOR = sv.LabelAnnotator()

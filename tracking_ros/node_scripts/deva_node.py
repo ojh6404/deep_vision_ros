@@ -21,8 +21,8 @@ from deva.dataset.utils import im_normalization
 from deva.inference.object_info import ObjectInfo
 
 from tracking_ros.cfg import GroundingDINOConfig as ServerConfig
-from model_config import SAMConfig, GroundingDINOConfig, DEVAConfig
-from utils import overlay_davis
+from tracking_ros.model_config import SAMConfig, GroundingDINOConfig, DEVAConfig
+from tracking_ros.utils import overlay_davis
 
 torch.autograd.set_grad_enabled(False)
 

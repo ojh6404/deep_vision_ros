@@ -12,7 +12,7 @@ from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
 
-from model_config import OneFormerConfig
+from tracking_ros.model_config import OneFormerConfig
 
 
 class OneFormerNode(ConnectionBasedTransport):

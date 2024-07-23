@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
 )
 
+catkin_python_setup()
+
 # ------------------------------------------------------------------------------------
 # Download checkpoints
 # ------------------------------------------------------------------------------------

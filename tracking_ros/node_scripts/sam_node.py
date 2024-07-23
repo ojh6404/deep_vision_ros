@@ -12,8 +12,8 @@ from tracking_ros_utils.srv import SamPrompt, SamPromptResponse, CutiePrompt, Cu
 from jsk_topic_tools import ConnectionBasedTransport
 
 from segment_anything.utils.amg import remove_small_regions
-from model_config import SAMConfig
-from utils import draw_prompt, overlay_davis
+from tracking_ros.model_config import SAMConfig
+from tracking_ros.utils import draw_prompt, overlay_davis
 
 
 class SAMNode(ConnectionBasedTransport):

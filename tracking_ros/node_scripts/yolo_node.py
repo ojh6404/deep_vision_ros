@@ -15,8 +15,8 @@ from jsk_recognition_msgs.msg import ClassificationResult
 
 from segment_anything.utils.amg import remove_small_regions
 from tracking_ros.cfg import YOLOConfig as ServerConfig
-from model_config import YOLOConfig, SAMConfig
-from utils import overlay_davis
+from tracking_ros.model_config import YOLOConfig, SAMConfig
+from tracking_ros.utils import overlay_davis
 
 BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
 LABEL_ANNOTATOR = sv.LabelAnnotator()
