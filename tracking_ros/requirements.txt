@@ -49,7 +49,7 @@ icecream
 wandb
 diffdist
 --find-links https://shi-labs.com/natten/wheels/
-natten==0.17.1+torch220cu121
+natten==0.17.1+torch230cu121
 git+https://github.com/ChaoningZhang/MobileSAM.git
 git+https://github.com/cheind/py-thin-plate-spline
 git+https://github.com/hkchengrex/Cutie.git
