@@ -1,3 +1,5 @@
+torch
+torchvision
 setuptools==69.5.1
 numpy>=1.24.0,<2.0.0
 matplotlib>=3.6.0
@@ -22,8 +24,6 @@ pyyaml
 av
 openmim
 psutil
-torch
-torchvision
 transformers
 addict
 yapf
@@ -43,12 +43,13 @@ ultralytics
 segment-anything
 segment-anything-hq
 mmcv-full
-natten
 h5py
 einops
 icecream
 wandb
 diffdist
+--find-links https://shi-labs.com/natten/wheels/
+natten==0.17.1+torch220cu121
 git+https://github.com/ChaoningZhang/MobileSAM.git
 git+https://github.com/cheind/py-thin-plate-spline
 git+https://github.com/hkchengrex/Cutie.git
@@ -58,3 +59,4 @@ git+https://github.com/openai/CLIP.git
 git+https://github.com/facebookresearch/detectron2.git
 git+https://github.com/cocodataset/panopticapi.git
 git+https://github.com/mcordts/cityscapesScripts.git
+-e git+https://github.com/IDEA-Research/MaskDINO.git#egg=MultiScaleDeformableAttention&subdirectory=maskdino/modeling/pixel_decoder/ops
