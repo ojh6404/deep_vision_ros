@@ -746,7 +746,7 @@ class OneFormerConfig(ROSInferenceModelConfig):
         return demo
 
     @classmethod
-    def from_args(cls, model_type: str = "panoptic_swinl", device: str = "cuda:0"):
+    def from_args(cls, model_type: str = "coco_swinl", device: str = "cuda:0"):
         return cls(model_name="OneFormer", model_type=model_type, device=device)
 
     @classmethod
