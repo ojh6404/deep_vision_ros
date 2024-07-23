@@ -41,9 +41,7 @@ class VLPartReconfigureNode(object):
                 _classes:='{}' \
                 _device:={} \
                 _use_sam:={} \
-            """.format(
-                self.node_name, self.input_image, self.vocabulary, self.classes, self.device, self.use_sam
-            ),
+            """.format(self.node_name, self.input_image, self.vocabulary, self.classes, self.device, self.use_sam),
             shell=True,
         )
         return config
