@@ -1,28 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import cv2
-import supervision as sv
 import rospy
-
 from cv_bridge import CvBridge
 from sensor_msgs.msg import Image
 from jsk_topic_tools import ConnectionBasedTransport
 from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
-from tracking_ros_utils.srv import SamPrompt, SamPromptRequest
 
-from tracking_ros.model_config import SAMConfig, VLPartConfig
+from tracking_ros.model_config import VLPartConfig
 from tracking_ros.model_wrapper import VLPartModel
-from tracking_ros.utils import overlay_davis
 
-# from dynamic_reconfigure.server import Server
-# from tracking_ros.cfg import VLPartConfig as ServerConfig
-
-BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
-LABEL_ANNOTATOR = sv.LabelAnnotator()
 
 
 class VLPartNode(ConnectionBasedTransport):
@@ -36,7 +25,6 @@ class VLPartNode(ConnectionBasedTransport):
             if _class.strip()
         ]
         self.confidence_threshold = rospy.get_param("~confidence_threshold", 0.5)
-        self.use_sam = rospy.get_param("~use_sam", False)
         self.initialize()
 
         self.bridge = CvBridge()
@@ -65,14 +53,6 @@ class VLPartNode(ConnectionBasedTransport):
         self.model.set_model(self.vocabulary, self.classes, self.confidence_threshold)
         # initialize the model with the mask
         self.detect_flag = True
-
-    # TODO: Detectron2 does not support modifying metadata while running
-    # def config_cb(self, config, level):
-    #     self.vocabulary = config.vocabulary
-    #     self.classes = [_class.strip() for _class in config.classes.split(";") if _class.strip()]
-    #     self.confidence_threshold = config.confidence_threshold
-    #     self.initialize()
-    #     return config
 
     def publish_result(self, boxes, label_names, scores, mask, vis, frame_id):
         if label_names is not None:
