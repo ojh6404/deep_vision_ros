@@ -1,12 +1,12 @@
-[submodule "tracking_ros/Cutie"]
-	path = tracking_ros/Cutie
+[submodule "deep_vision_ros/Cutie"]
+	path = deep_vision_ros/Cutie
 	url = https://github.com/hkchengrex/Cutie.git
-[submodule "tracking_ros/VLPart"]
-	path = tracking_ros/VLPart
+[submodule "deep_vision_ros/VLPart"]
+	path = deep_vision_ros/VLPart
 	url = https://github.com/facebookresearch/VLPart.git
-[submodule "tracking_ros/MaskDINO"]
-	path = tracking_ros/MaskDINO
+[submodule "deep_vision_ros/MaskDINO"]
+	path = deep_vision_ros/MaskDINO
 	url = https://github.com/IDEA-Research/MaskDINO.git
-[submodule "tracking_ros/OneFormer"]
-	path = tracking_ros/OneFormer
+[submodule "deep_vision_ros/OneFormer"]
+	path = deep_vision_ros/OneFormer
 	url = https://github.com/SHI-Labs/OneFormer.git
