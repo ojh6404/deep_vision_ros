@@ -1,0 +1,20 @@
+<launch>
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="model_type" default="panoptic_swinl" /> <!-- panoptic_swinl, panotpic_r50, ... -->
+  <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
+  <arg name="maskdino_node_name" default="maskdino_node"/>
+  <arg name="confidence_threshold" default="0.7" /> <!-- confidence threshold -->
+
+  <!-- maskdino node -->
+  <node name="$(arg maskdino_node_name)"
+          pkg="deep_vision_ros" type="maskdino_node.py"
+          output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <rosparam subst_value="true" >
+        model_type: $(arg model_type)
+        confidence_threshold: $(arg confidence_threshold)
+        device: $(arg device)
+    </rosparam>
+  </node>
+
+</launch>

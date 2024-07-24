@@ -1,0 +1,23 @@
+<launch>
+  <node pkg="image_publisher" type="image_publisher" name="image_publisher"
+      args="$(find deep_vision_ros)/test/data/desk.jpg" >
+    <param name="flip_horizontal" value="false" />
+    <param name="flip_vertical" value="false" />
+    <param name="frame_id" value="dummy_camera" />
+    <param name="publish_rate" value="10" />
+  </node>
+
+  <!-- deva node -->
+  <node name="deva_node"
+        pkg="deep_vision_ros" type="deva_node.py"
+        output="screen" >
+    <remap from="~input_image" to="/image_publisher/image_raw" />
+    <rosparam subst_value="true" >
+        device: cuda
+        classes: ['monitor', 'cup', 'book', 'keyboard']
+        model_type: "vit_t"
+        with_bbox: true
+    </rosparam>
+  </node>
+  <test test-name="test_deep_vision_ros_node" pkg="deep_vision_ros" type="test_deep_vision_ros_node.py" />
+</launch>

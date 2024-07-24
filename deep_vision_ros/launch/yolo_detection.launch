@@ -1,0 +1,39 @@
+<launch>
+  <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
+  <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
+  <arg name="model_id" default="yolov8x-worldv2.pt" /> <!-- YOLO model, refer ultralytics yolo world model -->
+  <arg name="model_type" default="vit_t" /> <!-- SAM model : vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
+  <arg name="get_mask" default="false" /> <!-- get mask when grounding detection -->
+  <arg name="track" default="false" />
+  <arg name="with_bbox" default="true" /> <!-- false if faster, but for visualization -->
+  <arg name="refine_mask" default="true" /> <!-- refine mask predicts twice to refine mask -->
+
+  <arg name="_get_mask" value="true" if="$(arg track)"/>
+  <arg name="_get_mask" value="$(arg get_mask)" unless="$(arg track)"/>
+
+  <!-- yolo_world_node -->
+  <node name="yolo_node"
+          pkg="deep_vision_ros" type="yolo_node.py"
+          output="screen" >
+    <remap from="~input_image" to="$(arg input_image)" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+        get_mask: $(arg _get_mask)
+        model_id: $(arg model_id)
+        model_type: $(arg model_type)
+        refine_mask: $(arg refine_mask)
+    </rosparam>
+  </node>
+
+  <!-- cutie node -->
+  <node name="cutie_node"
+        pkg="deep_vision_ros" type="cutie_node.py"
+        output="screen" if="$(arg track)">
+    <remap from="~input_image" to="$(arg input_image)" />
+    <remap from="~input_segmentation" to="/yolo_node/output/segmentation" />
+    <rosparam subst_value="true" >
+        device: $(arg device)
+        with_bbox: $(arg with_bbox)
+    </rosparam>
+  </node>
+</launch>
