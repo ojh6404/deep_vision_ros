@@ -1,6 +1,6 @@
-# tracking_ros  [![python_check](https://github.com/ojh6404/tracking_ros/actions/workflows/python_check.yml/badge.svg)](https://github.com/ojh6404/tracking_ros/actions/workflows/python_check.yml)
+# deep_vision_ros  [![python_check](https://github.com/ojh6404/deep_vision_ros/actions/workflows/python_check.yml/badge.svg)](https://github.com/ojh6404/deep_vision_ros/actions/workflows/python_check.yml)
 
-ROS1 package for detecting and tracking objects using [SAM](https://github.com/facebookresearch/segment-anything.git), [Cutie](https://github.com/hkchengrex/Cutie.git), [GroundingDINO](https://github.com/IDEA-Research/GroundingDINO.git) and [DEVA](https://github.com/hkchengrex/Tracking-Anything-with-DEVA.git), inspired by [detic_ros](https://github.com/HiroIshida/detic_ros.git).
+ROS1 package for SOTA Computer Vision Models including [SAM](https://github.com/facebookresearch/segment-anything.git), [Cutie](https://github.com/hkchengrex/Cutie.git), [GroundingDINO](https://github.com/IDEA-Research/GroundingDINO.git), [DEVA](https://github.com/hkchengrex/Tracking-Anything-with-DEVA.git), [VLPart](https://github.com/facebookresearch/VLPart.git), [OneFormer](https://github.com/SHI-Labs/OneFormer.git) and [MaskDINO](https://github.com/IDEA-Research/MaskDINO.git).
 
 ## Usage
 Tested : image of 480X640 30hz, 3090ti
@@ -28,29 +28,29 @@ This package is build upon
 If you want build this package directly on your workspace, please be aware of python environment dependencies (python3.9 and pytorch is needed to build package).
 ```bash
 mkdir -p ~/ros/catkin_ws/src && cd ~/ros/catkin_ws/src
-git clone https://github.com/ojh6404/tracking_ros.git
+git clone https://github.com/ojh6404/deep_vision_ros.git
 wstool init
-wstool merge -t . tracking_ros/tracking_ros/rosinstall.noetic
+wstool merge -t . deep_vision_ros/deep_vision_ros/rosinstall.noetic
 wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
-cd tracking_ros/tracking_ros && ./prepare.sh
+cd deep_vision_ros/deep_vision_ros && ./prepare.sh
 cd ~/ros/catkin_ws && catkin b
 ```
 
 #### using docker (Recommended)
-Otherwise, you can build only `tracking_ros_utils` package for using intractive prompt gui
+Otherwise, you can build only `deep_vision_ros_utils` package for using intractive prompt gui
 ```bash
 mkdir -p ~/ros/catkin_ws/src && cd ~/ros/catkin_ws/src
-git clone https://github.com/ojh6404/tracking_ros.git
+git clone https://github.com/ojh6404/deep_vision_ros.git
 wstool init
-wstool merge -t . tracking_ros/tracking_ros/rosinstall.noetic
+wstool merge -t . deep_vision_ros/deep_vision_ros/rosinstall.noetic
 wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
-cd ~/ros/catkin_ws && catkin b tracking_ros_utils
+cd ~/ros/catkin_ws && catkin b deep_vision_ros_utils
 ```
 and build whole package on docker environment.
 ```bash
 source ~/ros/catkin_ws/devel/setup.bash
-roscd tracking_ros_utils/../tracking_ros
-docker build --build-arg CUDA_VERSION=11.3 -t tracking_ros . # default is 11.3, you can also build with 12.1
+roscd deep_vision_ros_utils/../deep_vision_ros
+docker build --build-arg CUDA_VERSION=11.3 -t deep_vision_ros . # default is 11.3, you can also build with 12.1
 ```
 
 ## How to use
@@ -58,7 +58,7 @@ Please refer sample_track.launch and deva.launch
 ### Tracking using SAM and Cutie with interactive gui prompt.
 #### 1. run directly
 ```bash
-roslaunch tracking_ros sample_track.launch \
+roslaunch deep_vision_ros sample_track.launch \
     input_image:=/kinect_head/rgb/image_rect_color \
     mode:=prompt \
     model_type:=vit_t \
@@ -79,12 +79,12 @@ where
 
 and launch rqt gui on your gui machine by
 ```bash
-roslaunch tracking_ros_utils sam_gui.launch
+roslaunch deep_vision_ros_utils sam_gui.launch
 ```
 
 ### Detecting and tracking object.
 ```bash
-roslaunch tracking_ros deva.launch \
+roslaunch deep_vision_ros deva.launch \
     input_image:=/kinect_head/rgb/image_rect_color \
     model_type:=vit_t \
     device:=cuda:0
