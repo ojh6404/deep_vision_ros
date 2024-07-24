@@ -13,14 +13,15 @@ from jsk_topic_tools import ConnectionBasedTransport
 
 from segment_anything.utils.amg import remove_small_regions
 from tracking_ros.model_config import SAMConfig
+from tracking_ros.model_wrapper import SAMModel
 from tracking_ros.utils import draw_prompt, overlay_davis
 
 
 class SAMNode(ConnectionBasedTransport):
     def __init__(self):
         super(SAMNode, self).__init__()
-        self.sam_config = SAMConfig.from_rosparam()
-        self.predictor = self.sam_config.get_predictor()
+        self.config = SAMConfig.from_rosparam()
+        self.model = SAMModel(self.config)
         self.interactive_mode = rospy.get_param("~interactive_mode", True)
         self.refine_mask = rospy.get_param("~refine_mask", False)
         self.track = rospy.get_param("~track", False)
@@ -28,7 +29,7 @@ class SAMNode(ConnectionBasedTransport):
             self.area_threshold = rospy.get_param("~area_threshold", 400)
             self.refine_mode = rospy.get_param("~refine_mode", "holes")  # "holes" or "islands"
 
-        if self.sam_config.mode == "prompt":  # prompt mode
+        if self.config.mode == "prompt":  # prompt mode
             if self.interactive_mode:
                 self.toggle_prompt_label_service = rospy.Service(
                     "/sam_node/sam_controller/toggle_label",
@@ -91,26 +92,12 @@ class SAMNode(ConnectionBasedTransport):
 
     def process_prompt_callback(self, srv):
         # TODO: only bbox for now
-        self.image = self.bridge.imgmsg_to_cv2(srv.image, desired_encoding="rgb8")
-        self.embedded_image = self.image
-        self.predictor.set_image(self.embedded_image)
-        result_mask = None
-        for i, box in enumerate(srv.boxes):
-            mask, logit = self.process_prompt(
-                points=None,
-                labels=None,
-                bbox=np.array([box.x, box.y, box.x + box.width, box.y + box.height]),
-                multimask=self.multimask,
-            )
-            if result_mask is None:
-                result_mask = mask.astype(np.uint8)
-            else:
-                result_mask[mask] = i + 1
-        self.visualization = self.image.copy()
-        if result_mask is not None:
-            self.visualization = overlay_davis(self.visualization, result_mask)
-        seg_msg = self.bridge.cv2_to_imgmsg(result_mask.astype(np.int32), encoding="32SC1")
-        vis_img_msg = self.bridge.cv2_to_imgmsg(self.visualization, encoding="rgb8")
+        image = self.bridge.imgmsg_to_cv2(srv.image, desired_encoding="rgb8")
+        segmentation, visualization = self.model.predict(
+            image=image, points=None, labels=None, boxes=srv.boxes
+        )
+        seg_msg = self.bridge.cv2_to_imgmsg(segmentation, encoding="32SC1")
+        vis_img_msg = self.bridge.cv2_to_imgmsg(visualization, encoding="rgb8")
         seg_msg.header = srv.image.header
         vis_img_msg.header = srv.image.header
         self.pub_seg.publish(seg_msg)
@@ -126,7 +113,7 @@ class SAMNode(ConnectionBasedTransport):
             buff_size=2**24,
         )
         self.subs = [self.sub_image]
-        if self.sam_config.mode == "prompt":
+        if self.config.mode == "prompt":
             self.sub_point = rospy.Subscriber(
                 "~input_point",
                 PointStamped,
@@ -186,9 +173,9 @@ class SAMNode(ConnectionBasedTransport):
     def reset_embed_callback(self, srv):
         rospy.loginfo("Embedding image for segmentation")
         if self.embedded_image is not None:
-            self.predictor.reset_image()
+            self.model.predictor.reset_image()
         self.embedded_image = self.image.copy()
-        self.predictor.set_image(self.embedded_image)
+        self.model.predictor.set_image(self.embedded_image)
         return EmptyResponse()
 
     def publish_mask_callback(self, srv):  # TODO
@@ -215,7 +202,12 @@ class SAMNode(ConnectionBasedTransport):
         point_x = int(point_msg.point.x)  # x is within 0 ~ width
         point_y = int(point_msg.point.y)  # y is within 0 ~ height
 
-        if point_x < 1 or point_x > (self.image.shape[1] - 1) or point_y < 1 or point_y > (self.image.shape[0] - 1):
+        if (
+            point_x < 1
+            or point_x > (self.image.shape[1] - 1)
+            or point_y < 1
+            or point_y > (self.image.shape[0] - 1)
+        ):
             rospy.logwarn("point {} is out of image shape".format([point_x, point_y]))
             return
 
@@ -270,8 +262,8 @@ class SAMNode(ConnectionBasedTransport):
         multimask: bool = True,
     ):
         self.embedded_image = self.image
-        self.predictor.set_image(self.embedded_image)
-        masks, scores, logits = self.predictor.predict(
+        self.model.predictor.set_image(self.embedded_image)
+        masks, scores, logits = self.model.predictor.predict(
             point_coords=points,
             point_labels=labels,
             box=bbox,
@@ -282,7 +274,7 @@ class SAMNode(ConnectionBasedTransport):
 
         if self.refine_mask:
             # refine mask using logit
-            masks, scores, logits = self.predictor.predict(
+            masks, scores, logits = self.model.predictor.predict(
                 point_coords=points,
                 point_labels=labels,
                 box=bbox,
@@ -311,7 +303,7 @@ class SAMNode(ConnectionBasedTransport):
             if self.publish_mask:
                 self.publish_result(self.mask, self.visualization, img_msg.header.frame_id)
             else:
-                if self.sam_config.mode == "prompt":  # when prompt mode
+                if self.config.mode == "prompt":  # when prompt mode
                     self.visualization = self.image.copy()
                     if self.mask is not None:  # if mask exists
                         if self.prompt_mask is not None:  # if prompt mask exists
@@ -322,7 +314,9 @@ class SAMNode(ConnectionBasedTransport):
                             self.visualization = overlay_davis(self.visualization, self.mask)
                     else:  # when initial state
                         if self.prompt_mask is not None:  # if prompt mask exists
-                            self.visualization = overlay_davis(self.visualization, self.prompt_mask.astype(np.uint8))
+                            self.visualization = overlay_davis(
+                                self.visualization, self.prompt_mask.astype(np.uint8)
+                            )
                     self.visualization = draw_prompt(
                         self.visualization,
                         self.prompt_points,
@@ -333,7 +327,7 @@ class SAMNode(ConnectionBasedTransport):
                     self.publish_result(None, self.visualization, img_msg.header.frame_id)
 
                 else:
-                    masks = self.predictor.generate(self.image)  # dict of masks
+                    masks = self.model.predictor.generate(self.image)  # dict of masks
                     self.masks = [mask["segmentation"] for mask in masks]  # list of [H, W]
                     if self.num_slots > 0:
                         self.masks = [mask["segmentation"] for mask in masks][: self.num_slots]

@@ -53,3 +53,25 @@ def overlay_davis(image: np.ndarray, mask: np.ndarray, alpha: float = 0.5, fade:
     if fade:
         im_overlay[~binary_mask] = im_overlay[~binary_mask] * 0.6
     return im_overlay.astype(image.dtype)
+
+
+def nhw_to_hw(nhw: np.ndarray) -> np.ndarray:
+    """
+    Convert Mask [N, H, W] to [H, W], where N is the number of instances.
+    """
+    N, H, W = nhw.shape
+    hw = np.zeros((H, W), dtype=np.int32)
+    for i in range(N):
+        hw[nhw[i]] = i + 1
+    return hw
+
+
+def hw_to_nhw(hw: np.ndarray) -> np.ndarray:
+    """
+    Convert Mask [H, W] to [N, H, W], where N is the number of instances.
+    """
+    N = np.max(hw)
+    nhw = np.zeros((N, *hw.shape), dtype=np.int32)
+    for i in range(N):
+        nhw[i] = hw == i + 1
+    return nhw

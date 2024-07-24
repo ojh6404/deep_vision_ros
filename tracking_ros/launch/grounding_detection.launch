@@ -7,6 +7,9 @@
   <arg name="with_bbox" default="true" /> <!-- false if faster, but for visualization -->
   <arg name="refine_mask" default="true" /> <!-- refine mask predicts twice to refine mask -->
 
+  <arg name="_get_mask" value="true" if="$(arg track)"/>
+  <arg name="_get_mask" value="$(arg get_mask)" unless="$(arg track)"/>
+
   <!-- grounding_dino_node -->
   <node name="grounding_dino_node"
           pkg="tracking_ros" type="grounding_dino_node.py"
@@ -14,7 +17,7 @@
     <remap from="~input_image" to="$(arg input_image)" />
     <rosparam subst_value="true" >
         device: $(arg device)
-        get_mask: $(arg get_mask)
+        get_mask: $(arg _get_mask)
         model_type: $(arg model_type)
         refine_mask: $(arg refine_mask)
     </rosparam>

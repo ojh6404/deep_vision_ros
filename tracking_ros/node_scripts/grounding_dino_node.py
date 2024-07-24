@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import torch
-import torchvision
-import supervision as sv
-import numpy as np
 import rospy
-
 from cv_bridge import CvBridge
 from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
@@ -14,31 +9,24 @@ from jsk_topic_tools import ConnectionBasedTransport
 from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
-from tracking_ros_utils.srv import SamPrompt, SamPromptRequest
 
-from segment_anything.utils.amg import remove_small_regions
 from tracking_ros.cfg import GroundingDINOConfig as ServerConfig
 from tracking_ros.model_config import GroundingDINOConfig, SAMConfig
-from tracking_ros.utils import overlay_davis
+from tracking_ros.model_wrapper import GroundingDINOModel, SAMModel
 
-BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
-LABEL_ANNOTATOR = sv.LabelAnnotator()
+from tracking_ros.utils import overlay_davis
 
 
 class GroundingDinoNode(ConnectionBasedTransport):
     def __init__(self):
         super(GroundingDinoNode, self).__init__()
-        self.reconfigure_server = Server(ServerConfig, self.config_cb)
-        self.gd_config = GroundingDINOConfig.from_rosparam()
-        self.predictor = self.gd_config.get_predictor()
         self.get_mask = rospy.get_param("~get_mask", False)
+        self.gd_config = GroundingDINOConfig.from_rosparam()
+        self.model = GroundingDINOModel(self.gd_config)
         if self.get_mask:
             self.sam_config = SAMConfig.from_rosparam()
-            self.sam_predictor = self.sam_config.get_predictor()
-            self.refine_mask = rospy.get_param("~refine_mask", False)
-            if self.refine_mask:
-                self.area_threshold = rospy.get_param("~area_threshold", 400)
-                self.refine_mode = rospy.get_param("~refine_mode", "holes")  # "holes" or "islands"
+            self.sam_model = SAMModel(self.sam_config)
+        self.reconfigure_server = Server(ServerConfig, self.config_cb)
 
         self.bridge = CvBridge()
         self.pub_vis_img = self.advertise("~output/debug_image", Image, queue_size=1)
@@ -63,10 +51,14 @@ class GroundingDinoNode(ConnectionBasedTransport):
     def config_cb(self, config, level):
         self.detect_flag = False
         self.classes = [_class.strip() for _class in config.classes.split(";") if _class.strip()]
+        self.model.set_model(self.classes, config.box_threshold, config.text_threshold, config.nms_threshold)
+        if self.get_mask:
+            self.sam_model.set_model(
+                rospy.get_param("~refine_mask", False),
+                rospy.get_param("~area_threshold", 400),
+                rospy.get_param("~refine_mode", "holes"),
+            )
         rospy.loginfo(f"Detecting Classes: {self.classes}")
-        self.box_threshold = config.box_threshold
-        self.text_threshold = config.text_threshold
-        self.nms_threshold = config.nms_threshold
         self.detect_flag = True
         return config
 
@@ -116,87 +108,14 @@ class GroundingDinoNode(ConnectionBasedTransport):
 
     def callback(self, img_msg):
         if self.detect_flag:
-            self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-            detections = self.predictor.predict_with_classes(
-                image=self.image,
-                classes=self.classes,
-                box_threshold=self.box_threshold,
-                text_threshold=self.text_threshold,
-            )
-
-            nms_idx = (
-                torchvision.ops.nms(
-                    torch.from_numpy(detections.xyxy),
-                    torch.from_numpy(detections.confidence),
-                    self.nms_threshold,
-                )
-                .numpy()
-                .tolist()
-            )
-
-            detections.xyxy = detections.xyxy[nms_idx]
-            detections.confidence = detections.confidence[nms_idx]
-            detections.class_id = detections.class_id[nms_idx]
-
-            labels = [self.classes[cls_id] for cls_id in detections.class_id]
-            scores = detections.confidence.tolist()
-            labels_with_scores = [f"{label} {score:.2f}" for label, score in zip(labels, scores)]
-
-            visualization = self.image.copy()
+            image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
             segmentation = None
-            if self.get_mask and len(detections.xyxy) > 0:
-                result_mask = None
-                for i, box in enumerate(detections.xyxy):
-                    mask, logit = self.process_prompt(
-                        points=None,
-                        labels=None,
-                        bbox=np.array([box[0], box[1], box[2], box[3]]),
-                        multimask=False,
-                    )
-                    if result_mask is None:
-                        result_mask = mask.astype(np.uint8)
-                    else:
-                        result_mask[mask] = i + 1
-                visualization = self.image.copy()
-                if result_mask is not None:
-                    visualization = overlay_davis(visualization, result_mask)
-                segmentation = result_mask.astype(np.int32)
-            visualization = BOX_ANNOTATOR.annotate(scene=visualization, detections=detections)
-            visualization = LABEL_ANNOTATOR.annotate(
-                scene=visualization, detections=detections, labels=labels_with_scores
-            )
-            self.publish_result(detections.xyxy, labels, scores, segmentation, visualization, img_msg.header.frame_id)
+            boxes, labels, scores, visualization = self.model.predict(image)
 
-    def process_prompt(
-        self,
-        points=None,
-        bbox=None,
-        labels=None,
-        mask_input=None,
-        multimask: bool = True,
-    ):
-        self.sam_predictor.set_image(self.image)
-        masks, scores, logits = self.sam_predictor.predict(
-            point_coords=points,
-            point_labels=labels,
-            box=bbox,
-            mask_input=mask_input,  # TODO
-            multimask_output=multimask,
-        )  # [N, H, W], B : number of prompts, N : number of masks recommended
-        mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
-
-        if self.refine_mask:
-            # refine mask using logit
-            masks, scores, logits = self.sam_predictor.predict(
-                point_coords=points,
-                point_labels=labels,
-                box=bbox,
-                mask_input=logit[None, :, :],
-                multimask_output=multimask,
-            )
-            mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
-            mask, _ = remove_small_regions(mask, self.area_threshold, mode=self.refine_mode)
-        return mask, logit
+            if self.get_mask:
+                segmentation, _ = self.sam_model.predict(image=image, boxes=boxes)
+                visualization = overlay_davis(visualization, segmentation)
+            self.publish_result(boxes, labels, scores, segmentation, visualization, img_msg.header.frame_id)
 
 
 if __name__ == "__main__":

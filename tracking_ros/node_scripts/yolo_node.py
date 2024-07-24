@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import supervision as sv
-import numpy as np
 import rospy
-
 from cv_bridge import CvBridge
 from dynamic_reconfigure.server import Server
 from sensor_msgs.msg import Image
@@ -13,29 +10,23 @@ from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
 
-from segment_anything.utils.amg import remove_small_regions
 from tracking_ros.cfg import YOLOConfig as ServerConfig
 from tracking_ros.model_config import YOLOConfig, SAMConfig
-from tracking_ros.utils import overlay_davis
+from tracking_ros.model_wrapper import YOLOModel, SAMModel
 
-BOX_ANNOTATOR = sv.BoundingBoxAnnotator()
-LABEL_ANNOTATOR = sv.LabelAnnotator()
+from tracking_ros.utils import overlay_davis
 
 
 class YOLONode(ConnectionBasedTransport):
     def __init__(self):
         super(YOLONode, self).__init__()
-        self.yolo_config = YOLOConfig.from_rosparam()
-        self.predictor = self.yolo_config.get_predictor()
-        self.reconfigure_server = Server(ServerConfig, self.config_cb)
         self.get_mask = rospy.get_param("~get_mask", False)
+        self.yolo_config = YOLOConfig.from_rosparam()
+        self.model = YOLOModel(self.yolo_config)
         if self.get_mask:
             self.sam_config = SAMConfig.from_rosparam()
-            self.sam_predictor = self.sam_config.get_predictor()
-            self.refine_mask = rospy.get_param("~refine_mask", False)
-            if self.refine_mask:
-                self.area_threshold = rospy.get_param("~area_threshold", 400)
-                self.refine_mode = rospy.get_param("~refine_mode", "holes")  # "holes" or "islands"
+            self.sam_model = SAMModel(self.sam_config)
+        self.reconfigure_server = Server(ServerConfig, self.config_cb)
 
         self.bridge = CvBridge()
         self.pub_vis_img = self.advertise("~output/debug_image", Image, queue_size=1)
@@ -61,9 +52,13 @@ class YOLONode(ConnectionBasedTransport):
         self.detect_flag = False
         self.classes = [_class.strip() for _class in config.classes.split(";") if _class.strip()]
         rospy.loginfo(f"Detecting Classes: {self.classes}")
-        self.predictor.set_classes(self.classes)
-        self.box_threshold = config.box_threshold
-        self.nms_threshold = config.nms_threshold
+        self.model.set_model(self.classes, config.box_threshold, config.nms_threshold)
+        if self.get_mask:
+            self.sam_model.set_model(
+                rospy.get_param("~refine_mask", False),
+                rospy.get_param("~area_threshold", 400),
+                rospy.get_param("~refine_mode", "holes"),
+            )
         self.detect_flag = True
         return config
 
@@ -113,69 +108,15 @@ class YOLONode(ConnectionBasedTransport):
 
     def callback(self, img_msg):
         if self.detect_flag:
-            self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            results = self.predictor.predict(self.image, save=False, conf=self.box_threshold, iou=self.nms_threshold)[0]
-            detections = sv.Detections.from_ultralytics(results)
-
-            labels = [results.names[cls_id] for cls_id in detections.class_id]
-            scores = detections.confidence.tolist()
-            labels_with_scores = [f"{label} {score:.2f}" for label, score in zip(labels, scores)]
-
-            visualization = self.image.copy()
+            image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
             segmentation = None
-            if self.get_mask and len(detections.xyxy) > 0:
-                result_mask = None
-                for i, box in enumerate(detections.xyxy):
-                    mask, logit = self.process_prompt(
-                        points=None,
-                        labels=None,
-                        bbox=np.array([box[0], box[1], box[2], box[3]]),
-                        multimask=False,
-                    )
-                    if result_mask is None:
-                        result_mask = mask.astype(np.uint8)
-                    else:
-                        result_mask[mask] = i + 1
-                visualization = self.image.copy()
-                if result_mask is not None:
-                    visualization = overlay_davis(visualization, result_mask)
-                segmentation = result_mask.astype(np.int32)
-            visualization = BOX_ANNOTATOR.annotate(scene=visualization, detections=detections)
-            visualization = LABEL_ANNOTATOR.annotate(
-                scene=visualization, detections=detections, labels=labels_with_scores
-            )
-            self.publish_result(detections.xyxy, labels, scores, segmentation, visualization, img_msg.header.frame_id)
+            boxes, labels, scores, visualization = self.model.predict(image)
 
-    def process_prompt(
-        self,
-        points=None,
-        bbox=None,
-        labels=None,
-        mask_input=None,
-        multimask: bool = True,
-    ):
-        self.sam_predictor.set_image(self.image)
-        masks, scores, logits = self.sam_predictor.predict(
-            point_coords=points,
-            point_labels=labels,
-            box=bbox,
-            mask_input=mask_input,  # TODO
-            multimask_output=multimask,
-        )  # [N, H, W], B : number of prompts, N : number of masks recommended
-        mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
+            if self.get_mask:
+                segmentation, _ = self.sam_model.predict(image=image, boxes=boxes)
+                visualization = overlay_davis(visualization, segmentation)
 
-        if self.refine_mask:
-            # refine mask using logit
-            masks, scores, logits = self.sam_predictor.predict(
-                point_coords=points,
-                point_labels=labels,
-                box=bbox,
-                mask_input=logit[None, :, :],
-                multimask_output=multimask,
-            )
-            mask, logit = masks[np.argmax(scores)], logits[np.argmax(scores)]
-            mask, _ = remove_small_regions(mask, self.area_threshold, mode=self.refine_mode)
-        return mask, logit
+            self.publish_result(boxes, labels, scores, segmentation, visualization, img_msg.header.frame_id)
 
 
 if __name__ == "__main__":

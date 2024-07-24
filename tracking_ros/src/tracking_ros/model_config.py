@@ -1,33 +1,68 @@
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import os
 import rospy
 import rospkg
-import torch
 from typing import List
+from tracking_ros.model_base import InferenceConfigBase
 
 CHECKPOINT_ROOT = os.path.join(rospkg.RosPack().get_path("tracking_ros"), "trained_data")
 
 
 @dataclass
-class ROSInferenceModelConfig(ABC):
-    model_name: str
-    device: str = "cuda:0"
-
-    # mypy doesn't understand abstractclassmethod, so we use this workaround
-    @abstractmethod
-    def get_predictor(self):
-        pass
-
+class ROSInferenceModelConfig(InferenceConfigBase):
     @classmethod
-    @abstractmethod
     def from_rosparam(cls):
         pass
 
+
+@dataclass
+class GroundingDINOConfig(ROSInferenceModelConfig):
+    model_config = os.path.join(CHECKPOINT_ROOT, "groundingdino/GroundingDINO_SwinT_OGC.py")
+    model_checkpoint = os.path.join(CHECKPOINT_ROOT, "groundingdino/groundingdino_swint_ogc.pth")
+
+    def get_predictor(self):
+        try:
+            from groundingdino.util.inference import Model as GroundingDINOModel
+        except ImportError:
+            from GroundingDINO.groundingdino.util.inference import (
+                Model as GroundingDINOModel,
+            )
+        return GroundingDINOModel(
+            model_config_path=self.model_config,
+            model_checkpoint_path=self.model_checkpoint,
+            device=self.device,
+        )
+
     @classmethod
-    @abstractmethod
-    def from_args(cls):
-        pass
+    def from_args(cls, device: str = "cuda:0"):
+        return cls(model_name="GroundingDINO", device=device)
+
+    @classmethod
+    def from_rosparam(cls):
+        return cls.from_args(rospy.get_param("~device", "cuda:0"))
+
+
+@dataclass
+class YOLOConfig(ROSInferenceModelConfig):
+    model_id: str = "yolov8x-worldv2.pt"
+
+    def get_predictor(self):
+        from ultralytics import YOLOWorld
+
+        return YOLOWorld(
+            self.model_id,
+        )
+
+    @classmethod
+    def from_args(cls, model_id: str = "yolov8x-worldv2.pt", device: str = "cuda:0"):
+        return cls(model_name="YOLO", model_id=model_id, device=device)
+
+    @classmethod
+    def from_rosparam(cls):
+        return cls.from_args(
+            rospy.get_param("~model_id", "yolov8x-worldv2.pt"),
+            rospy.get_param("~device", "cuda:0"),
+        )
 
 
 @dataclass
@@ -89,6 +124,7 @@ class CutieConfig(ROSInferenceModelConfig):
     model_checkpoint = os.path.join(CHECKPOINT_ROOT, "cutie/cutie-base-mega.pth")
 
     def get_predictor(self):
+        import torch
         from omegaconf import open_dict
         import hydra
         from hydra import compose, initialize
@@ -101,7 +137,7 @@ class CutieConfig(ROSInferenceModelConfig):
         with torch.inference_mode():
             initialize(
                 version_base="1.3.2",
-                config_path="../Cutie/cutie/config",
+                config_path="../../Cutie/cutie/config",
                 job_name="eval_config",
             )
             cfg = compose(config_name="eval_config")
@@ -130,9 +166,18 @@ class CutieConfig(ROSInferenceModelConfig):
 @dataclass
 class DEVAConfig(ROSInferenceModelConfig):
     model_checkpoint = os.path.join(CHECKPOINT_ROOT, "deva/DEVA-propagation.pth")
+    detection_every: int = 5
+    enable_long_term: bool = True
+    max_num_objects: int = 50
+    max_missed_detection_count: int = 10
+    amp: bool = True
+    chunk_size: int = 4
+    temporal_setting: str = "online"
+    pluralize: bool = True
 
     def get_predictor(self):
         from argparse import ArgumentParser
+        import torch
         from deva.model.network import DEVA
         from deva.inference.inference_core import DEVAInferenceCore
         from deva.inference.eval_args import add_common_eval_args
@@ -160,21 +205,20 @@ class DEVAConfig(ROSInferenceModelConfig):
             print("No model loaded.")
 
         # TODO clean it and make it configurable
-        cfg["enable_long_term_count_usage"] = True
-        cfg["max_num_objects"] = 50
-        cfg["amp"] = True
-        cfg["chunk_size"] = 4
-        cfg["detection_every"] = 5
-        cfg["max_missed_detection_count"] = 10
-        cfg["temporal_setting"] = "online"
-        cfg["pluralize"] = True
-        cfg["DINO_THRESHOLD"] = 0.5
+        cfg["enable_long_term_count_usage"] = self.enable_long_term
+        cfg["max_num_objects"] = self.max_num_objects
+        cfg["amp"] = self.amp
+        cfg["chunk_size"] = self.chunk_size
+        cfg["detection_every"] = self.detection_every
+        cfg["max_missed_detection_count"] = self.max_missed_detection_count
+        cfg["temporal_setting"] = self.temporal_setting
+        cfg["pluralize"] = self.pluralize
 
         deva = DEVAInferenceCore(deva_model, config=cfg)
         deva.next_voting_frame = cfg["num_voting_frames"] - 1
         deva.enabled_long_id()
 
-        return deva, cfg
+        return deva
 
     @classmethod
     def from_args(cls, device: str = "cuda:0"):
@@ -183,56 +227,6 @@ class DEVAConfig(ROSInferenceModelConfig):
     @classmethod
     def from_rosparam(cls):
         return cls.from_args(rospy.get_param("~device", "cuda:0"))
-
-
-@dataclass
-class GroundingDINOConfig(ROSInferenceModelConfig):
-    model_config = os.path.join(CHECKPOINT_ROOT, "groundingdino/GroundingDINO_SwinT_OGC.py")
-    model_checkpoint = os.path.join(CHECKPOINT_ROOT, "groundingdino/groundingdino_swint_ogc.pth")
-
-    def get_predictor(self):
-        try:
-            from groundingdino.util.inference import Model as GroundingDINOModel
-        except ImportError:
-            from GroundingDINO.groundingdino.util.inference import (
-                Model as GroundingDINOModel,
-            )
-        return GroundingDINOModel(
-            model_config_path=self.model_config,
-            model_checkpoint_path=self.model_checkpoint,
-            device=self.device,
-        )
-
-    @classmethod
-    def from_args(cls, device: str = "cuda:0"):
-        return cls(model_name="GroundingDINO", device=device)
-
-    @classmethod
-    def from_rosparam(cls):
-        return cls.from_args(rospy.get_param("~device", "cuda:0"))
-
-
-@dataclass
-class YOLOConfig(ROSInferenceModelConfig):
-    model_id: str = "yolov8x-worldv2.pt"
-
-    def get_predictor(self):
-        from ultralytics import YOLOWorld
-
-        return YOLOWorld(
-            self.model_id,
-        )
-
-    @classmethod
-    def from_args(cls, model_id: str = "yolov8x-worldv2.pt", device: str = "cuda:0"):
-        return cls(model_name="YOLO", model_id=model_id, device=device)
-
-    @classmethod
-    def from_rosparam(cls):
-        return cls.from_args(
-            rospy.get_param("~model_id", "yolov8x-worldv2.pt"),
-            rospy.get_param("~device", "cuda:0"),
-        )
 
 
 @dataclass
@@ -261,7 +255,9 @@ class VLPartConfig(ROSInferenceModelConfig):
         "swinbase_cascade_voc": os.path.join(model_checkpoint_root, "swinbase_cascade_voc.pth"),
         "swinbase_cascade_coco": os.path.join(model_checkpoint_root, "swinbase_cascade_coco.pth"),
         "swinbase_cascade_lvis": os.path.join(model_checkpoint_root, "swinbase_cascade_lvis.pth"),
-        "swinbase_cascade_partimagenet": os.path.join(model_checkpoint_root, "swinbase_cascade_partimagenet.pth"),
+        "swinbase_cascade_partimagenet": os.path.join(
+            model_checkpoint_root, "swinbase_cascade_partimagenet.pth"
+        ),
         "swinbase_cascade_pascalpart": os.path.join(model_checkpoint_root, "swinbase_cascade_pascalpart.pth"),
         "swinbase_cascade_paco": os.path.join(model_checkpoint_root, "swinbase_cascade_paco.pth"),
         "swinbase_cascade_lvis_paco": os.path.join(model_checkpoint_root, "swinbase_cascade_lvis_paco.pth"),
@@ -306,9 +302,13 @@ class VLPartConfig(ROSInferenceModelConfig):
         "swinbase_cascade_partimagenet": os.path.join(
             model_root, "configs/partimagenet/swinbase_cascade_partimagenet.yaml"
         ),
-        "swinbase_cascade_pascalpart": os.path.join(model_root, "configs/pascalpart/swinbase_cascade_pascalpart.yaml"),
+        "swinbase_cascade_pascalpart": os.path.join(
+            model_root, "configs/pascalpart/swinbase_cascade_pascalpart.yaml"
+        ),
         "swinbase_cascade_paco": os.path.join(model_root, "configs/joint/swinbase_cascade_lvis_paco.yaml"),
-        "swinbase_cascade_lvis_paco": os.path.join(model_root, "configs/joint/swinbase_cascade_lvis_paco.yaml"),
+        "swinbase_cascade_lvis_paco": os.path.join(
+            model_root, "configs/joint/swinbase_cascade_lvis_paco.yaml"
+        ),
         "swinbase_cascade_lvis_paco_pascalpart": os.path.join(
             model_root, "configs/joint/swinbase_cascade_lvis_paco_pascalpart.yaml"
         ),
@@ -355,7 +355,9 @@ class VLPartConfig(ROSInferenceModelConfig):
             # replace the filename in the list to the full path
             for idx, filename in enumerate(cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH_GROUP):
                 if filename:
-                    cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH_GROUP[idx] = os.path.join(self.model_root, filename)
+                    cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_PATH_GROUP[idx] = os.path.join(
+                        self.model_root, filename
+                    )
             cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_INFERENCE_PATH = os.path.join(
                 self.model_root, cfg.MODEL.ROI_BOX_HEAD.ZEROSHOT_WEIGHT_INFERENCE_PATH
             )
@@ -397,6 +399,7 @@ class VLPartConfig(ROSInferenceModelConfig):
 @dataclass
 class MaskDINOConfig(ROSInferenceModelConfig):
     model_type: str = "panoptic_swinl"
+    confidence_threshold: float = 0.7
     model_root = rospkg.RosPack().get_path("tracking_ros") + "/MaskDINO"
     model_checkpoint_root = os.path.join(CHECKPOINT_ROOT, "MaskDINO")
     model_checkpoints = {
@@ -468,7 +471,7 @@ class MaskDINOConfig(ROSInferenceModelConfig):
         ),
     }
 
-    def get_predictor(self, confidence_threshold: float = 0.7):
+    def get_predictor(self):
         import argparse
         import sys
 
@@ -491,7 +494,7 @@ class MaskDINOConfig(ROSInferenceModelConfig):
 
         args = {
             "config_file": self.model_configs[self.model_type],
-            "confidence_threshold": confidence_threshold,
+            "confidence_threshold": self.confidence_threshold,
             "opts": ["MODEL.WEIGHTS", self.model_checkpoints[self.model_type]],
         }
 
@@ -501,13 +504,21 @@ class MaskDINOConfig(ROSInferenceModelConfig):
         return demo
 
     @classmethod
-    def from_args(cls, model_type: str = "panoptic_swinl", device: str = "cuda:0"):
-        return cls(model_name="MaskDINO", model_type=model_type, device=device)
+    def from_args(
+        cls, model_type: str = "panoptic_swinl", confidence_threshold: float = 0.7, device: str = "cuda:0"
+    ):
+        return cls(
+            model_name="MaskDINO",
+            model_type=model_type,
+            confidence_threshold=confidence_threshold,
+            device=device,
+        )
 
     @classmethod
     def from_rosparam(cls):
         return cls.from_args(
             rospy.get_param("~model_type", "panoptic_swinl"),
+            rospy.get_param("~confidence_threshold", 0.7),
             rospy.get_param("~device", "cuda:0"),
         )
 
@@ -515,6 +526,8 @@ class MaskDINOConfig(ROSInferenceModelConfig):
 @dataclass
 class OneFormerConfig(ROSInferenceModelConfig):
     model_type: str = "ade20k_swinl_640"
+    confidence_threshold: float = 0.7
+    task: str = "panoptic"
     model_root = rospkg.RosPack().get_path("tracking_ros") + "/OneFormer"
     model_checkpoint_root = os.path.join(CHECKPOINT_ROOT, "OneFormer")
     model_checkpoints = {
@@ -682,7 +695,7 @@ class OneFormerConfig(ROSInferenceModelConfig):
         ),
     }
 
-    def get_predictor(self, task: str = "panoptic", confidence_threshold: float = 0.7):
+    def get_predictor(self):
         import argparse
         import torch
         import numpy as np
@@ -728,8 +741,8 @@ class OneFormerConfig(ROSInferenceModelConfig):
 
         args = {
             "config_file": self.model_configs[self.model_type],
-            "confidence_threshold": confidence_threshold,
-            "task": task,
+            "confidence_threshold": self.confidence_threshold,
+            "task": self.task,
             "opts": [
                 "MODEL.IS_TRAIN",
                 "False",
@@ -746,12 +759,26 @@ class OneFormerConfig(ROSInferenceModelConfig):
         return demo
 
     @classmethod
-    def from_args(cls, model_type: str = "coco_swinl", device: str = "cuda:0"):
-        return cls(model_name="OneFormer", model_type=model_type, device=device)
+    def from_args(
+        cls,
+        model_type: str = "coco_swinl",
+        task: str = "panoptic",
+        confidence_threshold: float = 0.7,
+        device: str = "cuda:0",
+    ):
+        return cls(
+            model_name="OneFormer",
+            model_type=model_type,
+            task=task,
+            confidence_threshold=confidence_threshold,
+            device=device,
+        )
 
     @classmethod
     def from_rosparam(cls):
         return cls.from_args(
             rospy.get_param("~model_type", "panoptic_swinl"),
+            rospy.get_param("~task", "panoptic"),
+            rospy.get_param("~confidence_threshold", 0.7),
             rospy.get_param("~device", "cuda:0"),
         )

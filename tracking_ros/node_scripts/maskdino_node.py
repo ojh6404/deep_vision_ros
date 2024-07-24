@@ -13,12 +13,12 @@ from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
 
 from tracking_ros.model_config import MaskDINOConfig
+from tracking_ros.model_wrapper import MaskDINOModel
 
 
 class MaskDINONode(ConnectionBasedTransport):
     def __init__(self):
         super(MaskDINONode, self).__init__()
-        self.confidence_threshold = rospy.get_param("~confidence_threshold", 0.7)
         self.initialize()
 
         self.bridge = CvBridge()
@@ -43,17 +43,8 @@ class MaskDINONode(ConnectionBasedTransport):
     def initialize(self):
         self.detect_flag = False
         self.config = MaskDINOConfig.from_rosparam()
-        self.predictor = self.config.get_predictor(
-            confidence_threshold=self.confidence_threshold,
-        )
-        if "panoptic" in self.config.model_type:
-            self.classes = self.predictor.metadata.stuff_classes
-        elif "instance" in self.config.model_type:
-            self.classes = self.predictor.metadata.thing_classes
-        elif "semantic" in self.config.model_type:
-            self.classes = self.predictor.metadata.stuff_classes
-        else:
-            raise ValueError(f"Unknown model type: {self.config.model_type}")
+        self.model = MaskDINOModel(self.config)
+        self.model.set_model()
         self.detect_flag = True
 
     def publish_result(self, boxes, label_names, scores, mask, vis, frame_id):
@@ -67,8 +58,8 @@ class MaskDINONode(ConnectionBasedTransport):
             class_result = ClassificationResult(
                 header=label_array.header,
                 classifier=self.config.model_name,
-                target_names=self.classes,
-                labels=[self.classes.index(name) for name in label_names],
+                target_names=self.model.classes,
+                labels=[self.model.classes.index(name) for name in label_names],
                 label_names=label_names,
                 label_proba=scores,
             )
@@ -102,51 +93,10 @@ class MaskDINONode(ConnectionBasedTransport):
 
     def callback(self, img_msg):
         if self.detect_flag:
-            self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-            segmentation = None
-            xyxys = None
-            labels = None
-            scores = None
-            scores = None
-
-            predictions, visualized_output = self.predictor.run_on_image(self.image)
-            visualization = visualized_output.get_image()
-
-            if "panoptic_seg" in predictions:  # when panoptic segmentation
-                panoptic_seg, segments_info = predictions["panoptic_seg"]
-                classes = [info["category_id"] for info in segments_info]
-                if classes:
-                    segmentation = panoptic_seg.cpu().numpy().astype(np.int32)  # [H, W]
-                    # masks is [N, H, W] from segmentation [H, W] to use mask_to_xyxy
-                    H, W = segmentation.shape
-                    unique_instances = np.unique(segmentation)
-                    unique_instances = unique_instances[unique_instances != 0]
-                    N = len(unique_instances)
-                    masks = np.zeros((N, H, W), dtype=bool)
-                    for i, instance_id in enumerate(unique_instances):
-                        masks[i] = segmentation == instance_id
-                    xyxys = sv.mask_to_xyxy(masks)
-                    labels = [self.classes[cls_id] for cls_id in classes]
-                    scores = self.confidence_threshold * np.ones(len(classes))  # TODO get confidence from model
-            else:  # when instance or semantic segmentation
-                if "sem_seg" in predictions:
-                    pass  # TODO
-                if "instances" in predictions:
-                    instances = predictions["instances"].to("cpu")
-                    classes = instances.pred_classes.tolist()
-                    if classes:
-                        xyxys = instances.pred_boxes.tensor.numpy()  # [N, 4]
-                        labels = [self.classes[cls_id] for cls_id in classes]
-                        scores = instances.scores.tolist()
-                        masks = instances.pred_masks.numpy().astype(np.int32)  # [N, H, W]
-                        for i, mask in enumerate(masks):
-                            if segmentation is None:
-                                segmentation = mask
-                            else:
-                                segmentation[mask] = i + 1
-
+            image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
+            boxes, labels, scores, segmentation, visualization = self.model.predict(image)
             self.publish_result(
-                xyxys,
+                boxes,
                 labels,
                 scores,
                 segmentation,

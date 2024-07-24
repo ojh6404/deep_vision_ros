@@ -15,6 +15,7 @@ from jsk_recognition_msgs.msg import ClassificationResult
 from tracking_ros_utils.srv import SamPrompt, SamPromptRequest
 
 from tracking_ros.model_config import SAMConfig, VLPartConfig
+from tracking_ros.model_wrapper import VLPartModel
 from tracking_ros.utils import overlay_davis
 
 # from dynamic_reconfigure.server import Server
@@ -59,12 +60,9 @@ class VLPartNode(ConnectionBasedTransport):
 
     def initialize(self):
         self.detect_flag = False
-        self.vlpart_config = VLPartConfig.from_rosparam()
-        self.vlpart_predictor = self.vlpart_config.get_predictor(
-            vocabulary=self.vocabulary,
-            custom_vocabulary=self.classes,
-            confidence_threshold=self.confidence_threshold,
-        )
+        self.config = VLPartConfig.from_rosparam()
+        self.model = VLPartModel(self.config)
+        self.model.set_model(self.vocabulary, self.classes, self.confidence_threshold)
         # initialize the model with the mask
         self.detect_flag = True
 
@@ -86,7 +84,7 @@ class VLPartNode(ConnectionBasedTransport):
 
             class_result = ClassificationResult(
                 header=label_array.header,
-                classifier=self.vlpart_config.model_name,
+                classifier=self.config.model_name,
                 target_names=self.classes,
                 labels=[self.classes.index(name) for name in label_names],
                 label_names=label_names,
@@ -122,62 +120,8 @@ class VLPartNode(ConnectionBasedTransport):
 
     def callback(self, img_msg):
         if self.detect_flag:
-            self.image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-            visualization = self.image.copy()
-            segmentation = None
-            xyxys = None
-            labels = None
-            scores = None
-
-            # vlpart model inference
-            predictions, _ = self.vlpart_predictor.run_on_image(cv2.cvtColor(self.image, cv2.COLOR_RGB2BGR))
-            instances = predictions["instances"].to("cpu")
-            classes = instances.pred_classes.tolist()
-
-            if classes:  # if there are any detections
-                boxes = instances.pred_boxes.tensor
-                scores = instances.scores
-                masks = instances.pred_masks  # [N, H, W]
-                for i, mask in enumerate(masks):
-                    if segmentation is None:
-                        segmentation = mask.numpy().astype(np.int32)
-                    else:
-                        segmentation[mask] = i + 1
-                visualization = overlay_davis(visualization, segmentation)  # type: ignore
-
-                labels = [self.classes[cls_id] for cls_id in classes]
-                scores = scores.tolist()
-                labels_with_scores = [f"{label} {score:.2f}" for label, score in zip(labels, scores)]
-                xyxys = boxes.cpu().numpy()  # [N, 4]
-
-                detections = sv.Detections(
-                    xyxy=xyxys,
-                    class_id=np.array(classes),
-                    confidence=np.array(scores),
-                )
-                if self.use_sam:
-                    rospy.wait_for_service("/sam_node/process_prompt")
-                    try:
-                        prompt = SamPromptRequest()
-                        prompt.image = img_msg
-                        for xyxy in detections.xyxy:
-                            rect = Rect()
-                            rect.x = int(xyxy[0])  # x1
-                            rect.y = int(xyxy[1])  # y1
-                            rect.width = int(xyxy[2] - xyxy[0])  # x2 - x1
-                            rect.height = int(xyxy[3] - xyxy[1])  # y2 - y1
-                            prompt.boxes.append(rect)
-                        prompt_response = rospy.ServiceProxy("/sam_node/process_prompt", SamPrompt)
-                        res = prompt_response(prompt)
-                        seg_msg, vis_img_msg = res.segmentation, res.segmentation_image
-                        segmentation = self.bridge.imgmsg_to_cv2(seg_msg, desired_encoding="32SC1")
-                        visualization = self.bridge.imgmsg_to_cv2(vis_img_msg, desired_encoding="rgb8")
-                    except rospy.ServiceException as e:
-                        rospy.logerr(f"Service call failed: {e}")
-                visualization = BOX_ANNOTATOR.annotate(scene=visualization, detections=detections)
-                visualization = LABEL_ANNOTATOR.annotate(
-                    scene=visualization, detections=detections, labels=labels_with_scores
-                )
+            image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
+            xyxys, labels, scores, segmentation, visualization = self.model.predict(image)
             self.publish_result(xyxys, labels, scores, segmentation, visualization, img_msg.header.frame_id)
 
 

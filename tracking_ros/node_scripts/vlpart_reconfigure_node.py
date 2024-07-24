@@ -28,7 +28,9 @@ class VLPartReconfigureNode(object):
         rospy.loginfo(f"Detecting Classes: {self.classes}")
 
         # rosrun using subprocess cause vlpart is not configurable when it is running
-        if self.node_name in rosnode.get_node_names():  # Check if node exists, if it does, kill the node to reconfigure
+        if (
+            self.node_name in rosnode.get_node_names()
+        ):  # Check if node exists, if it does, kill the node to reconfigure
             rospy.loginfo("Node exists, killing node")
             rosnode.kill_nodes([self.node_name])
         else:  # If node does not exist, run the node
@@ -41,7 +43,9 @@ class VLPartReconfigureNode(object):
                 _classes:='{}' \
                 _device:={} \
                 _use_sam:={} \
-            """.format(self.node_name, self.input_image, self.vocabulary, self.classes, self.device, self.use_sam),
+            """.format(
+                self.node_name, self.input_image, self.vocabulary, self.classes, self.device, self.use_sam
+            ),
             shell=True,
         )
         return config
