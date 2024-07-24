@@ -9,4 +9,4 @@
 	url = https://github.com/IDEA-Research/MaskDINO.git
 [submodule "deep_vision_ros/OneFormer"]
 	path = deep_vision_ros/OneFormer
-	url = https://github.com/SHI-Labs/OneFormer.git
+	url = https://github.com/ojh6404/OneFormer.git
