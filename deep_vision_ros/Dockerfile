@@ -97,12 +97,14 @@ ENV PATH="$PATH:$HOME/.local/bin"
 # Installing catkin package
 RUN mkdir -p ~/catkin_ws/src
 RUN sudo rosdep init && rosdep update && sudo apt update
-RUN git config --global http.version HTTP/1.1
+RUN git config --global http.postBuffer 524288000  # Set a larger buffer size
+RUN git config --global core.compression 0         # Disable compression
 RUN git clone https://github.com/ojh6404/deep_vision_ros.git ~/catkin_ws/src
 RUN cd ~/catkin_ws/src/ &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\
     cd ~/catkin_ws/src/deep_vision_ros && ./prepare.sh &&\
+    python3.9 -m pip install -r requirements.txt &&\
     cd ~/catkin_ws && catkin init && catkin build &&\
     rm -rf ~/.cache/pip
 
