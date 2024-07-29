@@ -6,6 +6,7 @@ exclude = [
     "VLPart",
     "MaskDINO",
     "OneFormer",
+    "masa",
     "cfg",
     "tests/data",
     ".eggs",

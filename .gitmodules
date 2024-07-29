@@ -10,3 +10,6 @@
 [submodule "deep_vision_ros/OneFormer"]
 	path = deep_vision_ros/OneFormer
 	url = https://github.com/ojh6404/OneFormer.git
+[submodule "deep_vision_ros/masa"]
+	path = deep_vision_ros/masa
+	url = https://github.com/siyuanliii/masa.git

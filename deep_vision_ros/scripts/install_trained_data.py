@@ -422,6 +422,20 @@ def main():
         md5="691a6e7e4243cc58b6fa497f2107b735",
     )
 
+    # MASA
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/masa/masa_r50.pth",
+        url="https://huggingface.co/dereksiyuanli/masa/resolve/main/masa_r50.pth",
+        md5="1b67de86a3cb8cab35c4797bcb8ea95f",
+    )
+    download_data(
+        pkg_name=PKG,
+        path="trained_data/masa/gdino_masa.pth",
+        url="https://huggingface.co/dereksiyuanli/masa/resolve/main/gdino_masa.pth",
+        md5="4b703764ce82b6a133b47fb5aef2e4e2",
+    )
+
 
 if __name__ == "__main__":
     main()

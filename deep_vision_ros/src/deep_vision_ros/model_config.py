@@ -782,3 +782,46 @@ class OneFormerConfig(ROSInferenceModelConfig):
             rospy.get_param("~confidence_threshold", 0.7),
             rospy.get_param("~device", "cuda:0"),
         )
+
+
+@dataclass
+class MASAConfig(ROSInferenceModelConfig):
+    model_type: str = "masa_r50"
+    model_root: str = rospkg.RosPack().get_path("deep_vision_ros") + "/masa"
+    # TODO there are another model
+    model_configs = {
+        "masa_r50": os.path.join(model_root, "configs/masa-one/masa_r50_plug_and_play.py"),
+        "masa_gdino": os.path.join(model_root, "configs/masa-gdino/masa_gdino_swinb_inference.py"),
+    }
+    model_checkpoints = {
+        "masa_r50": os.path.join(CHECKPOINT_ROOT, "masa/masa_r50.pth"),
+        "masa_gdino": os.path.join(CHECKPOINT_ROOT, "masa/gdino_masa.pth"),
+    }
+
+    def get_predictor(self, memo_tracklet_frames: int = 10000):
+        import os
+        import sys
+
+        os.environ["TOKENIZERS_PARALLELISM"] = "false"
+        sys.path.insert(0, self.model_root)
+
+        from mmengine.config import Config
+
+        self.model_config = Config.fromfile(self.model_configs[self.model_type])
+        self.model_config["model"]["tracker"]["memo_tracklet_frames"] = memo_tracklet_frames
+
+        from masa.apis import init_masa
+
+        masa_model = init_masa(self.model_config, self.model_checkpoints[self.model_type], device=self.device)
+        return masa_model
+
+    @classmethod
+    def from_args(cls, model_type: str = "masa_r50", device: str = "cuda:0"):
+        return cls(model_name="MASA", model_type=model_type, device=device)
+
+    @classmethod
+    def from_rosparam(cls):
+        return cls.from_args(
+            rospy.get_param("~model_type", "masa_r50"),
+            rospy.get_param("~device", "cuda:0"),
+        )

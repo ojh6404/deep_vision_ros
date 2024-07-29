@@ -13,7 +13,6 @@ from deep_vision_ros.model_config import VLPartConfig
 from deep_vision_ros.model_wrapper import VLPartModel
 
 
-
 class VLPartNode(ConnectionBasedTransport):
     def __init__(self):
         super(VLPartNode, self).__init__()

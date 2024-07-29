@@ -1,5 +1,5 @@
-torch
-torchvision
+torch==2.3.1
+torchvision==0.18.1
 setuptools==69.5.1
 numpy>=1.24.0,<2.0.0
 matplotlib>=3.6.0
@@ -14,6 +14,7 @@ scikit-image>=0.19.0
 scikit-learn>=0.24.0
 packaging>=21
 rsa<4.8,>=3.1.2
+transformers==4.38.2
 gdown
 gitpython
 hickle
@@ -24,7 +25,6 @@ pyyaml
 av
 openmim
 psutil
-transformers
 addict
 yapf
 timm
@@ -48,15 +48,25 @@ einops
 icecream
 wandb
 diffdist
+seaborn
+fairscale
+--find-links https://download.openmmlab.com/mmcv/dist/cu121/torch2.3/index.html
+mmcv==2.1.0
 --find-links https://shi-labs.com/natten/wheels/
 natten==0.17.1+torch230cu121
+git+https://github.com/open-mmlab/mmdetection.git
 git+https://github.com/ChaoningZhang/MobileSAM.git
 git+https://github.com/cheind/py-thin-plate-spline
 git+https://github.com/hkchengrex/Cutie.git
-git+https://github.com/hkchengrex/Grounded-Segment-Anything.git#egg=groundingdino&subdirectory=GroundingDINO
+git+https://github.com/IDEA-Research/GroundingDINO.git
 git+https://github.com/hkchengrex/Tracking-Anything-with-DEVA.git
 git+https://github.com/openai/CLIP.git
 git+https://github.com/facebookresearch/detectron2.git
 git+https://github.com/cocodataset/panopticapi.git
 git+https://github.com/mcordts/cityscapesScripts.git
--e git+https://github.com/IDEA-Research/MaskDINO.git#egg=MultiScaleDeformableAttention&subdirectory=maskdino/modeling/pixel_decoder/ops
+git+https://github.com/siyuanliii/TrackEval.git
+git+https://github.com/SysCV/tet.git#subdirectory=teta
+git+https://github.com/scalabel/scalabel.git@scalabel-evalAPI
+git+https://github.com/TAO-Dataset/tao
+git+https://github.com/lvis-dataset/lvis-api.git
+git+https://github.com/IDEA-Research/MaskDINO.git#egg=MultiScaleDeformableAttention&subdirectory=maskdino/modeling/pixel_decoder/ops

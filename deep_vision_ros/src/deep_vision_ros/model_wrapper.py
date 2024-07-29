@@ -1,10 +1,12 @@
-from typing import List
+from typing import List, Optional
 import numpy as np
 import cv2
 import torch
 import torchvision
 import torch.nn.functional as F
 import supervision as sv
+from mmengine.dataset import default_collate
+from mmengine.runner import autocast
 
 
 from deep_vision_ros.model_base import InferenceConfigBase, InferenceModelBase
@@ -63,7 +65,7 @@ class GroundingDINOModel(InferenceModelBase):
         visualization = LABEL_ANNOTATOR.annotate(
             scene=visualization, detections=detections, labels=labels_with_scores
         )
-        return detections.xyxy, labels, scores, visualization
+        return detections, visualization
 
 
 class YOLOModel(InferenceModelBase):
@@ -104,17 +106,11 @@ class DEVAModel(InferenceModelBase):
                 self.model_config.device
             )
             if self.cnt % self.model_config.detection_every == 0:  # object detection query
-                boxes, labels, scores, _ = detection_model.predict(image)
-                detections = sv.Detections(
-                    xyxy=boxes,
-                    mask=None,
-                    class_id=np.array([detection_model.classes.index(label) for label in labels]),
-                    confidence=np.array(scores),
-                )
+                detections, _ = detection_model.predict(image)
 
                 # segment objects with SAM
                 result_masks = []
-                segmentation, _ = sam_model.predict(image=image, boxes=boxes)
+                segmentation, _ = sam_model.predict(image=image, boxes=detections.xyxy)
                 result_masks = np.array(hw_to_nhw(segmentation))
 
                 detections.mask = np.array(result_masks)
@@ -122,7 +118,7 @@ class DEVAModel(InferenceModelBase):
                     image.shape[:2], dtype=torch.int64, device=self.model_config.device
                 )
                 curr_id = 1
-                segments_info = []
+                detection_segments_info = []
                 # sort by descending area to preserve the smallest object
                 for i in np.flip(np.argsort(detections.area)):
                     mask = detections.mask[i]
@@ -132,58 +128,70 @@ class DEVAModel(InferenceModelBase):
                     mask = (mask > 0.5).float()
                     if mask.sum() > 0:
                         incorporate_mask[mask > 0] = curr_id
-                        segments_info.append(ObjectInfo(id=curr_id, category_id=class_id, score=confidence))
+                        detection_segments_info.append(
+                            ObjectInfo(id=curr_id, category_id=class_id, score=confidence)
+                        )
                         curr_id += 1
-                prob = self.predictor.incorporate_detection(torch_image, incorporate_mask, segments_info)
+                prob = self.predictor.incorporate_detection(
+                    torch_image, incorporate_mask, detection_segments_info, incremental=True
+                )
                 self.cnt = 1
-            else:  # just track objects
+            else:
                 prob = self.predictor.step(torch_image, None, None)
                 self.cnt += 1
             segmentation = torch.argmax(prob, dim=0).cpu().numpy().astype(np.int32)  # (H, W)
             object_num = len(np.unique(segmentation)) - 1  # without 0 (background)
+
+            segments_info = self.predictor.object_manager.get_current_segments_info()
+            seg_id_to_mask_id = {
+                key.id: value for key, value in self.predictor.object_manager.obj_to_tmp_id.items()
+            }
+
+            # filter out segments with area 0
+            for seg in segments_info:
+                area = int((segmentation == seg_id_to_mask_id[seg["id"]]).sum())
+                seg["area"] = area
+            segments_info = [seg for seg in segments_info if seg["area"] > 0]
+
             if object_num > 0:
-                masks = []
-                object_ids = np.unique(segmentation)[1:]  # without 0 (background)
-                for i in object_ids:
-                    mask = (segmentation == i).astype(np.uint8)
-                    masks.append(mask)
-                masks = np.stack(masks, axis=0)  # (N, H, W)
-                xyxy = sv.mask_to_xyxy(masks)
+                all_masks = []
+                labels = []
+                all_cat_ids = []
+                all_scores = []
+                for seg in segments_info:
+                    all_masks.append(segmentation == seg_id_to_mask_id[seg["id"]])
+                    labels.append(
+                        f'{detection_model.classes[seg["category_id"]]} {seg_id_to_mask_id[seg["id"]]} {seg["score"]:.2f}'
+                    )
+                    all_cat_ids.append(seg["category_id"])
+                    all_scores.append(seg["score"])
+                all_masks = np.stack(all_masks, axis=0)  # (N, H, W)
+                xyxy = sv.mask_to_xyxy(all_masks)
                 detections = sv.Detections(
                     xyxy=xyxy,
-                    mask=masks,
-                    class_id=object_ids,
+                    confidence=np.array(all_scores),
+                    class_id=np.array(all_cat_ids),
+                    tracker_id=np.array([seg_id_to_mask_id[seg["id"]] for seg in segments_info]),
                 )
                 painted_image = overlay_davis(image.copy(), segmentation)
-                # TODO convert labels to class name, but it needs some trick because object id and class id is not consistent between tracking and detecting
                 visualization = BOX_ANNOTATOR.annotate(
                     scene=painted_image,
                     detections=detections,
-                    # labels=[f"ObjectID: {obj_id}" for obj_id in object_ids],
+                )
+                visualization = LABEL_ANNOTATOR.annotate(
+                    scene=visualization,
+                    detections=detections,
+                    labels=labels,
                 )
 
-                # label_names = [self.classes[cls_id] for cls_id in detections.class_id]
-                # label_array = LabelArray()
-                # label_array.labels = [Label(id=i + 1, name=name) for i, name in enumerate(label_names)]
-                # label_array.header.stamp = rospy.Time.now()
-                # label_array.header.frame_id = img_msg.header.frame_id
-                # class_result = ClassificationResult(
-                #     header=label_array.header,
-                #     classifier=self.gd_config.model_name,
-                #     target_names=self.classes,
-                #     labels=[self.classes.index(name) for name in label_names],
-                #     label_names=label_names,
-                #     label_proba=detections.confidence.tolist(),
-                # )
-                # self.pub_labels.publish(label_array)
-                # self.pub_class.publish(class_result)
             else:
                 visualization = overlay_davis(image.copy(), segmentation)
                 detections = sv.Detections(
                     xyxy=np.empty((0, 4)),
                     mask=np.empty((0, 0, 0)),
                     class_id=np.empty(0),
-                )
+                    tracker_id=np.empty(0),
+                )  # empty detections
         return detections, visualization, segmentation
 
 
@@ -258,7 +266,7 @@ class MaskDINOModel(InferenceModelBase):
         elif "semantic" in self.model_config.model_type:
             self.classes = self.predictor.metadata.stuff_classes
         else:
-            raise ValueError(f"Unknown model type: {self.config.model_type}")
+            raise ValueError(f"Unknown model type: {self._modelconfig.model_type}")
 
     @torch.inference_mode()
     def predict(self, image: np.ndarray):
@@ -317,7 +325,7 @@ class OneFormerModel(InferenceModelBase):
         elif self.model_config.task == "semantic":
             self.classes = self.predictor.metadata.stuff_classes
         else:
-            raise ValueError(f"Unknown model type: {self.config.model_type}")
+            raise ValueError(f"Unknown model type: {self.model_config.model_type}")
 
     @torch.inference_mode()
     def predict(self, image: np.ndarray):
@@ -447,3 +455,171 @@ class VLPartModel(InferenceModelBase):
             scores = scores.tolist()
             xyxys = boxes.cpu().numpy()  # [N, 4]
         return xyxys, labels, scores, segmentation, visualization
+
+
+class MASAModel(InferenceModelBase):
+    def set_model(
+        self,
+        classes: Optional[List[str]] = None,
+        confidence_threshold: float = 0.2,
+        fp16: bool = False,
+    ):
+        import sys
+
+        sys.path.insert(0, self.model_config.model_root)
+        from masa.apis import build_test_pipeline
+
+        self.pipeline = build_test_pipeline(
+            self.predictor.cfg, with_text=False if self.model_config.model_type == "masa_r50" else True
+        )
+        self.classes = classes
+        self.confidence_threshold = confidence_threshold
+        self.fp16 = fp16
+        self.frame_cnt = 0
+        if self.model_config.model_type == "masa_gdino":
+            self.text_prompt = " . ".join(classes)
+
+    @torch.inference_mode()
+    def predict(self, image: np.ndarray, detection_model: Optional[InferenceModelBase] = None):
+        # image : bgr
+        if detection_model is not None and self.model_config.model_type == "masa_r50":
+            boxes, labels, scores, visualization = detection_model.predict(
+                cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            )
+
+            det_bboxes = torch.tensor(boxes)
+            det_scores = torch.tensor(scores)
+            det_bboxes = torch.cat([det_bboxes, det_scores.unsqueeze(1)], dim=1)
+            label_ids = [
+                detection_model.classes.index(label) for label in labels
+            ]  # convert label to label_id
+            det_labels = torch.tensor(label_ids)
+
+            data = dict(
+                img=[image.astype(np.float32)],
+                frame_id=[self.frame_cnt],
+                ori_shape=[image.shape[:2]],
+                img_id=[self.frame_cnt + 1],
+            )
+
+            data = self.pipeline(data)
+
+            # forward the model
+            with torch.no_grad():
+                data = default_collate([data])
+                if det_bboxes is not None:
+                    data["data_samples"][0].video_data_samples[0].det_bboxes = det_bboxes
+                    data["data_samples"][0].video_data_samples[0].det_labels = det_labels
+                with autocast(enabled=self.fp16):
+                    track_result = self.predictor.test_step(data)[0]
+
+            self.frame_cnt += 1
+
+            if "masks" in track_result[0].pred_track_instances:
+                if len(track_result[0].pred_track_instances.masks) > 0:
+                    track_result[0].pred_track_instances.masks = torch.stack(
+                        track_result[0].pred_track_instances.masks, dim=0
+                    )
+                    track_result[0].pred_track_instances.masks = (
+                        track_result[0].pred_track_instances.masks.cpu().numpy()
+                    )
+            track_result[0].pred_track_instances.bboxes = track_result[0].pred_track_instances.bboxes.to(
+                torch.float32
+            )
+
+            bboxes = track_result[0].pred_track_instances.bboxes  # tensor [N, 4]
+            instances_id = track_result[0].pred_track_instances.instances_id  # tensor [N]
+            scores = track_result[0].pred_track_instances.scores  # tensor [N]
+            label_ids = track_result[0].pred_track_instances.labels  # tensor [N]
+
+            # filter with score
+            mask = scores > self.confidence_threshold
+            bboxes = bboxes[mask]
+            instances_id = instances_id[mask.cpu()]
+            scores = scores[mask]
+            label_ids = label_ids[mask]
+
+            # labels_with_instances = [f"{label}_{instance_id}" for label, instance_id in zip(labels.cpu().numpy(), instances_id.cpu().numpy())]
+            labels_with_instances = [
+                f"{detection_model.classes[label_id]}_{instance_id}"
+                for label_id, instance_id in zip(label_ids.cpu().numpy(), instances_id.cpu().numpy())
+            ]
+
+            visualization = image.copy()
+            detections = sv.Detections(
+                xyxy=bboxes.cpu().numpy(),
+                tracker_id=instances_id.cpu().numpy(),
+                class_id=label_ids.cpu().numpy(),
+            )
+            visualization = BOX_ANNOTATOR.annotate(scene=visualization, detections=detections)
+            visualization = LABEL_ANNOTATOR.annotate(
+                scene=visualization, detections=detections, labels=labels_with_instances
+            )
+
+            return detections, visualization
+        else:
+            # unified model like "masa_gdino"
+            data = dict(
+                img=[image.astype(np.float32)],
+                frame_id=[self.frame_cnt],
+                ori_shape=[image.shape[:2]],
+                img_id=[self.frame_cnt + 1],
+            )
+            data["text"] = [self.text_prompt]
+            data["custom_entities"] = [False]
+
+            data = self.pipeline(data)
+
+            # forward the model
+            with torch.no_grad():
+                data = default_collate([data])
+                # measure FPS ##
+                with autocast(enabled=self.fp16):
+                    track_result = self.predictor.test_step(data)[0]
+
+            self.frame_cnt += 1
+
+            if "masks" in track_result[0].pred_track_instances:
+                if len(track_result[0].pred_track_instances.masks) > 0:
+                    track_result[0].pred_track_instances.masks = torch.stack(
+                        track_result[0].pred_track_instances.masks, dim=0
+                    )
+                    track_result[0].pred_track_instances.masks = (
+                        track_result[0].pred_track_instances.masks.cpu().numpy()
+                    )
+
+            track_result[0].pred_track_instances.bboxes = track_result[0].pred_track_instances.bboxes.to(
+                torch.float32
+            )
+
+            bboxes = track_result[0].pred_track_instances.bboxes  # tensor [N, 4]
+            instances_id = track_result[0].pred_track_instances.instances_id  # tensor [N]
+            scores = track_result[0].pred_track_instances.scores  # tensor [N]
+            label_ids = track_result[0].pred_track_instances.labels  # tensor [N]
+
+            # filter with score
+            mask = scores > self.confidence_threshold
+            bboxes = bboxes[mask]
+            instances_id = instances_id[mask.cpu()]
+            scores = scores[mask]
+            label_ids = label_ids[mask]
+
+            # labels_with_instances = [f"{label}_{instance_id}" for label, instance_id in zip(labels.cpu().numpy(), instances_id.cpu().numpy())]
+            # labels_with_instances = [f"{detection_model.classes[label_id]}_{instance_id}" for label_id, instance_id in zip(label_ids.cpu().numpy(), instances_id.cpu().numpy())]
+            labels_with_instances = [
+                f"{self.classes[label_id]}_{instance_id}"
+                for label_id, instance_id in zip(label_ids.cpu().numpy(), instances_id.cpu().numpy())
+            ]
+
+            visualization = image.copy()
+            detections = sv.Detections(
+                xyxy=bboxes.cpu().numpy(),
+                tracker_id=instances_id.cpu().numpy(),
+                class_id=label_ids.cpu().numpy(),
+            )
+            visualization = BOX_ANNOTATOR.annotate(scene=visualization, detections=detections)
+            visualization = LABEL_ANNOTATOR.annotate(
+                scene=visualization, detections=detections, labels=labels_with_instances
+            )
+
+            return detections, visualization
