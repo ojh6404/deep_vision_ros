@@ -13,6 +13,8 @@ _TORCH_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/torch"
 _TORCH_CACHE_DIR = os.getenv("TORCH_HOME", Path.home() / ".cache" / "torch")
 _HF_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/huggingface"
 _HF_CACHE_DIR = os.getenv("HF_HOME", Path.home() / ".cache" / "huggingface")
+_VISION_ANYTHING_CACHE_DIR = os.path.expanduser("~/.cache/vision_anything")
+_VISION_ANYTHING_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/vision_anything"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -58,11 +60,14 @@ if __name__ == "__main__":
 
         cache_option = """-v {torch_cache_dir}:{torch_cache_dir_inside_container} \
             -v {hf_cache_dir}:{hf_cache_dir_inside_container} \
+            -v {vision_anything_cache_dir}:{vision_anything_cache_dir_inside_container} \
         """.format(
             torch_cache_dir=_TORCH_CACHE_DIR,
             torch_cache_dir_inside_container=_TORCH_CACHE_DIR_INSIDE_CONTAINER,
             hf_cache_dir=_HF_CACHE_DIR,
             hf_cache_dir_inside_container=_HF_CACHE_DIR_INSIDE_CONTAINER,
+            vision_anything_cache_dir=_VISION_ANYTHING_CACHE_DIR,
+            vision_anything_cache_dir_inside_container=_VISION_ANYTHING_CACHE_DIR_INSIDE_CONTAINER,
         ) if args.cache else ""
         docker_run_command = """
             docker run \

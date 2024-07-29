@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-import numpy as np
 import rospy
 from cv_bridge import CvBridge
 from dynamic_reconfigure.server import Server
@@ -13,21 +12,32 @@ from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import ClassificationResult
 from jsk_recognition_msgs.msg import Label, LabelArray
 
+from vision_anything.config.model_config import GroundingDINOConfig, SAMConfig, DEVAConfig
+from vision_anything.model.model_wrapper import GroundingDINOModel, SAMModel, DEVAModel
 from deep_vision_ros.cfg import GroundingDINOConfig as ServerConfig
-from deep_vision_ros.model_config import SAMConfig, GroundingDINOConfig, DEVAConfig
-from deep_vision_ros.model_wrapper import GroundingDINOModel, SAMModel, DEVAModel
 
 
 class DevaNode(ConnectionBasedTransport):
     def __init__(self):
         super(DevaNode, self).__init__()
-        self.sam_config = SAMConfig.from_rosparam()
-        self.gd_config = GroundingDINOConfig.from_rosparam()
+        self.gd_config = GroundingDINOConfig.from_args(
+            model_type=rospy.get_param("~dino_model_type", "swinb"),
+            device=rospy.get_param("~device", "cuda:0"),
+        )
+        self.sam_config = SAMConfig.from_args(
+            model_type=rospy.get_param("~sam_model_type", "vit_t"),
+            mode="prompt",
+            device=rospy.get_param("~device", "cuda:0"),
+        )
+        self.deva_config = DEVAConfig.from_args(
+            device=rospy.get_param("~device", "cuda:0"),
+        )
+
         self.gd_model = GroundingDINOModel(self.gd_config)
-        self.deva_config = DEVAConfig.from_rosparam()
+        self.sam_model = SAMModel(self.sam_config)
         self.deva_model = DEVAModel(self.deva_config)
+
         self.reconfigure_server = Server(ServerConfig, self.config_cb)
-        self.with_bbox = rospy.get_param("~with_bbox", True)
 
         self.bridge = CvBridge()
         self.pub_seg = self.advertise("~output/segmentation", Image, queue_size=1)
@@ -50,18 +60,15 @@ class DevaNode(ConnectionBasedTransport):
 
     def config_cb(self, config, level):
         self.track_flag = False
-        self.sam_config = SAMConfig.from_rosparam()
-        self.sam_model = SAMModel(self.sam_config)
-        self.sam_model.set_model()
         self.classes = [_class.strip() for _class in config.classes.split(";")]
         self.gd_model.set_model(
             self.classes, config.box_threshold, config.text_threshold, config.nms_threshold
         )
+        self.sam_model.set_model()
         self.deva_model.set_model()
         rospy.loginfo(f"Detecting Classes: {self.classes}")
         self.track_flag = True
         return config
-
 
     def publish_result(self, boxes, label_names, scores, mask, vis, frame_id):
         if label_names is not None:
@@ -110,7 +117,7 @@ class DevaNode(ConnectionBasedTransport):
     def callback(self, img_msg):
         if self.track_flag:
             image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-            detections, visualization, segmentation = self.deva_model.predict(
+            detections, segmentation, visualization = self.deva_model.predict(
                 image, self.sam_model, self.gd_model
             )
             self.publish_result(

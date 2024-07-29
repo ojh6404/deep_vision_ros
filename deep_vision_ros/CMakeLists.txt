@@ -4,16 +4,8 @@ project(deep_vision_ros)
 find_package(catkin REQUIRED COMPONENTS
   catkin_virtualenv
   sensor_msgs
-  jsk_data
   dynamic_reconfigure
 )
-
-catkin_python_setup()
-
-# ------------------------------------------------------------------------------------
-# Download checkpoints
-# ------------------------------------------------------------------------------------
-add_custom_target(${PROJECT_NAME}_install_trained_data ALL COMMAND python$ENV{ROS_PYTHON_VERSION} ${PROJECT_SOURCE_DIR}/scripts/install_trained_data.py)
 
 # Dynamic reconfigure setup
 generate_dynamic_reconfigure_options(
@@ -25,7 +17,6 @@ generate_dynamic_reconfigure_options(
 
 catkin_package(
   CATKIN_DEPENDS
-  jsk_data
 )
 
 catkin_generate_virtualenv(

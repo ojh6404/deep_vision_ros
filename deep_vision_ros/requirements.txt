@@ -52,8 +52,6 @@ seaborn
 fairscale
 --find-links https://download.openmmlab.com/mmcv/dist/cu121/torch2.3/index.html
 mmcv==2.1.0
---find-links https://shi-labs.com/natten/wheels/
-natten==0.17.1+torch230cu121
 git+https://github.com/open-mmlab/mmdetection.git
 git+https://github.com/ChaoningZhang/MobileSAM.git
 git+https://github.com/cheind/py-thin-plate-spline

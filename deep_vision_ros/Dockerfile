@@ -104,7 +104,6 @@ RUN cd ~/catkin_ws/src/ &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\
     cd ~/catkin_ws/src/deep_vision_ros && ./prepare.sh &&\
-    python3.9 -m pip install -r requirements.txt &&\
     cd ~/catkin_ws && catkin init && catkin build &&\
     rm -rf ~/.cache/pip
 

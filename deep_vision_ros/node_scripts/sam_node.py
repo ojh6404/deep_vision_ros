@@ -12,15 +12,19 @@ from deep_vision_ros_utils.srv import SamPrompt, SamPromptResponse, CutiePrompt,
 from jsk_topic_tools import ConnectionBasedTransport
 
 from segment_anything.utils.amg import remove_small_regions
-from deep_vision_ros.model_config import SAMConfig
-from deep_vision_ros.model_wrapper import SAMModel
-from deep_vision_ros.utils import draw_prompt, overlay_davis
+from vision_anything.config.model_config import SAMConfig
+from vision_anything.model.model_wrapper import SAMModel
+from vision_anything.utils.vis_utils import draw_prompt, overlay_davis
 
 
 class SAMNode(ConnectionBasedTransport):
     def __init__(self):
         super(SAMNode, self).__init__()
-        self.config = SAMConfig.from_rosparam()
+        self.config = SAMConfig.from_args(
+            model_type=rospy.get_param("~sam_model_type", "vit_t"),
+            mode=rospy.get_param("~sam_mode", "prompt"),
+            device=rospy.get_param("~device", "cuda:0"),
+        )
         self.model = SAMModel(self.config)
         self.interactive_mode = rospy.get_param("~interactive_mode", True)
         self.refine_mask = rospy.get_param("~refine_mask", False)

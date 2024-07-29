@@ -2,11 +2,7 @@
 line-length = 110
 target-version = "py39"
 exclude = [
-    "Cutie",
-    "VLPart",
-    "MaskDINO",
-    "OneFormer",
-    "masa",
+    "VisionAnything",
     "cfg",
     "tests/data",
     ".eggs",

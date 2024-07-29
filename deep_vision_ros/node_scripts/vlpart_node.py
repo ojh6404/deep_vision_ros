@@ -9,8 +9,8 @@ from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
 
-from deep_vision_ros.model_config import VLPartConfig
-from deep_vision_ros.model_wrapper import VLPartModel
+from vision_anything.config.model_config import VLPartConfig
+from vision_anything.model.model_wrapper import VLPartModel
 
 
 class VLPartNode(ConnectionBasedTransport):
@@ -47,10 +47,14 @@ class VLPartNode(ConnectionBasedTransport):
 
     def initialize(self):
         self.detect_flag = False
-        self.config = VLPartConfig.from_rosparam()
+        self.config = VLPartConfig.from_args(
+            model_type=rospy.get_param(
+                "~model_type", "swinbase_cascade_lvis_paco_pascalpart_partimagenet_inparsed"
+            ),
+            device=rospy.get_param("~device", "cuda:0"),
+        )
         self.model = VLPartModel(self.config)
         self.model.set_model(self.vocabulary, self.classes, self.confidence_threshold)
-        # initialize the model with the mask
         self.detect_flag = True
 
     def publish_result(self, boxes, label_names, scores, mask, vis, frame_id):
@@ -100,8 +104,16 @@ class VLPartNode(ConnectionBasedTransport):
     def callback(self, img_msg):
         if self.detect_flag:
             image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-            xyxys, labels, scores, segmentation, visualization = self.model.predict(image)
-            self.publish_result(xyxys, labels, scores, segmentation, visualization, img_msg.header.frame_id)
+            detections, segmentation, visualization = self.model.predict(image)
+            labels = [self.classes[i] for i in detections.class_id]
+            self.publish_result(
+                detections.xyxy,
+                labels,
+                detections.confidence,
+                segmentation,
+                visualization,
+                img_msg.header.frame_id,
+            )
 
 
 if __name__ == "__main__":

@@ -1,15 +1,3 @@
-[submodule "deep_vision_ros/Cutie"]
-	path = deep_vision_ros/Cutie
-	url = https://github.com/hkchengrex/Cutie.git
-[submodule "deep_vision_ros/VLPart"]
-	path = deep_vision_ros/VLPart
-	url = https://github.com/facebookresearch/VLPart.git
-[submodule "deep_vision_ros/MaskDINO"]
-	path = deep_vision_ros/MaskDINO
-	url = https://github.com/IDEA-Research/MaskDINO.git
-[submodule "deep_vision_ros/OneFormer"]
-	path = deep_vision_ros/OneFormer
-	url = https://github.com/ojh6404/OneFormer.git
-[submodule "deep_vision_ros/masa"]
-	path = deep_vision_ros/masa
-	url = https://github.com/siyuanliii/masa.git
+[submodule "deep_vision_ros/VisionAnything"]
+	path = deep_vision_ros/VisionAnything
+	url = https://github.com/ojh6404/VisionAnything.git

@@ -1,10 +1,10 @@
 <launch>
   <arg name="device" default="cuda:0" /> <!-- cpu or cuda -->
   <arg name="input_image" default="/kinect_head/rgb/image_rect_color"/>
-  <arg name="model_type" default="vit_t" /> <!-- SAM model : vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
+  <arg name="dino_model_type" default="swinb" /> <!-- swint, swinb -->
+  <arg name="sam_model_type" default="vit_t" /> <!-- vit_t, vit_b, vit_l, vit_h ,vit_b_hq, vit_l_hq, vit_h_hq -->
   <arg name="get_mask" default="false" /> <!-- get mask when grounding detection -->
   <arg name="track" default="false" />
-  <arg name="with_bbox" default="true" /> <!-- false if faster, but for visualization -->
   <arg name="refine_mask" default="true" /> <!-- refine mask predicts twice to refine mask -->
 
   <arg name="_get_mask" value="true" if="$(arg track)"/>
@@ -18,7 +18,8 @@
     <rosparam subst_value="true" >
         device: $(arg device)
         get_mask: $(arg _get_mask)
-        model_type: $(arg model_type)
+        dino_model_type: $(arg dino_model_type)
+        sam_model_type: $(arg sam_model_type)
         refine_mask: $(arg refine_mask)
     </rosparam>
   </node>
@@ -31,7 +32,6 @@
     <remap from="~input_segmentation" to="/grounding_dino_node/output/segmentation" />
     <rosparam subst_value="true" >
         device: $(arg device)
-        with_bbox: $(arg with_bbox)
     </rosparam>
   </node>
 </launch>

@@ -13,18 +13,24 @@ from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import ClassificationResult
 from jsk_recognition_msgs.msg import Label, LabelArray
 
+from vision_anything.config.model_config import GroundingDINOConfig, MASAConfig
+from vision_anything.model.model_wrapper import GroundingDINOModel, MASAModel
 from deep_vision_ros.cfg import GroundingDINOConfig as ServerConfig
-from deep_vision_ros.model_config import GroundingDINOConfig, MASAConfig
-from deep_vision_ros.model_wrapper import GroundingDINOModel, MASAModel
 
 
 class MASANode(ConnectionBasedTransport):
     def __init__(self):
         super(MASANode, self).__init__()
         self.fp16 = rospy.get_param("~fp16", True)
-        self.gd_config = GroundingDINOConfig.from_rosparam()
+        self.gd_config = GroundingDINOConfig.from_args(
+            model_type=rospy.get_param("~dino_model_type", "swinb"),
+            device=rospy.get_param("~device", "cuda:0"),
+        )
         self.gd_model = GroundingDINOModel(self.gd_config)
-        self.masa_config = MASAConfig.from_rosparam()
+        self.masa_config = MASAConfig.from_args(
+            model_type=rospy.get_param("~masa_model_type", "masa_r50"),
+            device=rospy.get_param("~device", "cuda:0"),
+        )
         self.masa_model = MASAModel(self.masa_config)
         self.reconfigure_server = Server(ServerConfig, self.config_cb)
         self.with_bbox = rospy.get_param("~with_bbox", True)
@@ -122,6 +128,7 @@ class MASANode(ConnectionBasedTransport):
                     f"{self.gd_model.classes[label_id]}_{instance_id}"
                     for label_id, instance_id in zip(detections.class_id, detections.tracker_id)
                 ],
+                scores=detections.confidence,
                 vis=visualization,
                 frame_id=img_msg.header.frame_id,
             )

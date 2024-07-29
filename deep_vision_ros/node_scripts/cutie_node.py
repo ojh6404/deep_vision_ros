@@ -7,14 +7,13 @@ from sensor_msgs.msg import Image
 from std_srvs.srv import Empty, EmptyResponse
 from deep_vision_ros_utils.srv import CutiePrompt, CutiePromptResponse
 
-from deep_vision_ros.model_config import CutieConfig
-from deep_vision_ros.model_wrapper import CutieModel
+from vision_anything.config.model_config import CutieConfig
+from vision_anything.model.model_wrapper import CutieModel
 
 
 class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracker needs continuous input
     def __init__(self):
         super(CutieNode, self).__init__()
-        self.with_bbox = rospy.get_param("~with_bbox", False)
         self.bridge = CvBridge()
         image, mask = self.get_oneshot_prompt()
         self.track_flag = self.initialize(image, mask)
@@ -26,7 +25,7 @@ class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracke
             queue_size=1,
             buff_size=2**24,
         )
-        self.pub_vis_img = rospy.Publisher("~output/segmentation_image", Image, queue_size=1)
+        self.pub_vis_img = rospy.Publisher("~output/debug_image", Image, queue_size=1)
         self.pub_segmentation_img = rospy.Publisher("~output/segmentation", Image, queue_size=1)
 
         # reset tracking service
@@ -71,9 +70,11 @@ class CutieNode(object):  # should not be ConnectionBasedNode cause Cutie tracke
     def initialize(self, image, mask):
         if image is None or mask is None:
             return False
-        self.config = CutieConfig.from_rosparam()
+        self.config = CutieConfig.from_args(
+            device=rospy.get_param("~device", "cuda:0"),
+        )
         self.model = CutieModel(self.config)
-        self.model.set_model(image, mask)
+        self.model.set_model(image, mask, labels=None, classes=None)
         return True
 
     def publish_result(self, mask, vis, frame_id):

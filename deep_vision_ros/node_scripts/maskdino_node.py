@@ -12,8 +12,8 @@ from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
 
-from deep_vision_ros.model_config import MaskDINOConfig
-from deep_vision_ros.model_wrapper import MaskDINOModel
+from vision_anything.config.model_config import MaskDINOConfig
+from vision_anything.model.model_wrapper import MaskDINOModel
 
 
 class MaskDINONode(ConnectionBasedTransport):
@@ -42,7 +42,11 @@ class MaskDINONode(ConnectionBasedTransport):
 
     def initialize(self):
         self.detect_flag = False
-        self.config = MaskDINOConfig.from_rosparam()
+        self.config = MaskDINOConfig.from_args(
+            model_type=rospy.get_param("~model_type", "panoptic_swinl"),
+            confidence_threshold=rospy.get_param("~confidence_threshold", 0.7),
+            device=rospy.get_param("~device", "cuda:0"),
+        )
         self.model = MaskDINOModel(self.config)
         self.model.set_model()
         self.detect_flag = True
@@ -94,11 +98,12 @@ class MaskDINONode(ConnectionBasedTransport):
     def callback(self, img_msg):
         if self.detect_flag:
             image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="rgb8")
-            boxes, labels, scores, segmentation, visualization = self.model.predict(image)
+            detections, segmentation, visualization = self.model.predict(image)
+            labels = [self.model.classes[i] for i in detections.class_id]
             self.publish_result(
-                boxes,
+                detections.xyxy,
                 labels,
-                scores,
+                detections.confidence,
                 segmentation,
                 visualization,
                 img_msg.header.frame_id,

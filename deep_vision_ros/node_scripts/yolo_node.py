@@ -10,21 +10,27 @@ from jsk_recognition_msgs.msg import Rect, RectArray
 from jsk_recognition_msgs.msg import Label, LabelArray
 from jsk_recognition_msgs.msg import ClassificationResult
 
+from vision_anything.config.model_config import YOLOConfig, SAMConfig
+from vision_anything.model.model_wrapper import YOLOModel, SAMModel
+from vision_anything.utils.vis_utils import overlay_davis, BOX_ANNOTATOR, LABEL_ANNOTATOR
 from deep_vision_ros.cfg import YOLOConfig as ServerConfig
-from deep_vision_ros.model_config import YOLOConfig, SAMConfig
-from deep_vision_ros.model_wrapper import YOLOModel, SAMModel
-
-from deep_vision_ros.utils import overlay_davis
 
 
 class YOLONode(ConnectionBasedTransport):
     def __init__(self):
         super(YOLONode, self).__init__()
         self.get_mask = rospy.get_param("~get_mask", False)
-        self.yolo_config = YOLOConfig.from_rosparam()
+        self.yolo_config = YOLOConfig.from_args(
+            model_type=rospy.get_param("~model_type", "yolov8x_worldv2"),
+            device=rospy.get_param("~device", "cuda:0"),
+        )
         self.model = YOLOModel(self.yolo_config)
         if self.get_mask:
-            self.sam_config = SAMConfig.from_rosparam()
+            self.sam_config = SAMConfig.from_args(
+                model_type=rospy.get_param("~sam_model_type", "vit_t"),
+                mode="prompt",
+                device=rospy.get_param("~device", "cuda:0"),
+            )
             self.sam_model = SAMModel(self.sam_config)
         self.reconfigure_server = Server(ServerConfig, self.config_cb)
 
@@ -54,11 +60,7 @@ class YOLONode(ConnectionBasedTransport):
         rospy.loginfo(f"Detecting Classes: {self.classes}")
         self.model.set_model(self.classes, config.box_threshold, config.nms_threshold)
         if self.get_mask:
-            self.sam_model.set_model(
-                rospy.get_param("~refine_mask", False),
-                rospy.get_param("~area_threshold", 400),
-                rospy.get_param("~refine_mode", "holes"),
-            )
+            self.sam_model.set_model()
         self.detect_flag = True
         return config
 
@@ -109,14 +111,24 @@ class YOLONode(ConnectionBasedTransport):
     def callback(self, img_msg):
         if self.detect_flag:
             image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
+            detections, visualization = self.gd_model.predict(image)
+            labels = [self.classes[i] for i in detections.class_id]
             segmentation = None
-            boxes, labels, scores, visualization = self.model.predict(image)
 
             if self.get_mask:
-                segmentation, _ = self.sam_model.predict(image=image, boxes=boxes)
-                visualization = overlay_davis(visualization, segmentation)
-
-            self.publish_result(boxes, labels, scores, segmentation, visualization, img_msg.header.frame_id)
+                segmentation, visualization = self.sam_model.predict(image=image, boxes=detections.xyxy)
+                visualization = BOX_ANNOTATOR.annotate(scene=visualization, detections=detections)
+                visualization = LABEL_ANNOTATOR.annotate(
+                    scene=visualization, detections=detections, labels=labels
+                )
+            self.publish_result(
+                detections.xyxy,
+                labels,
+                detections.confidence,
+                segmentation,
+                visualization,
+                img_msg.header.frame_id,
+            )
 
 
 if __name__ == "__main__":

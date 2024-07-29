@@ -10,7 +10,6 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>python3-catkin-pkg-modules</buildtool_depend>.
   <build_depend>catkin_virtualenv</build_depend>
-  <build_depend>jsk_data</build_depend>
 
   <exec_depend>deep_vision_ros_utils</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
@@ -20,7 +19,6 @@
   <exec_depend>jsk_topic_tools</exec_depend>
   <exec_depend>jsk_perception</exec_depend>
   <exec_depend>dynamic_reconfigure</exec_depend>
-  <exec_depend>jsk_data</exec_depend>
   <exec_depend>cv_bridge</exec_depend>
 
   <test_depend>rostest</test_depend>
