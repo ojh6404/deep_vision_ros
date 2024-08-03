@@ -21,6 +21,7 @@ This package is build upon
 - ROS1 (Noetic)
 - python3.9, python3.9-dev, python3.9-venv
 - catkin virtualenv (python>=3.9 used for DEVA)
+- Nvidia Driver>=530 (for cuda-12.1)
 - (Optional) docker and nvidia-container-toolkit (for environment safety)
 
 ### Build package
@@ -67,7 +68,7 @@ and build whole package on docker environment.
 ```bash
 source ~/ros/catkin_ws/devel/setup.bash
 roscd deep_vision_ros_utils/../deep_vision_ros
-docker build --build-arg CUDA_VERSION=11.3 -t deep_vision_ros . # default is 11.3, you can also build with 12.1
+docker build -t deep_vision_ros .
 ```
 
 ## How to use
