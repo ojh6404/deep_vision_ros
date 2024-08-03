@@ -1,6 +1,6 @@
 # deep_vision_ros  [![python_check](https://github.com/ojh6404/deep_vision_ros/actions/workflows/python_check.yml/badge.svg)](https://github.com/ojh6404/deep_vision_ros/actions/workflows/python_check.yml)
 
-ROS1 package for SOTA Computer Vision Models including [SAM](https://github.com/facebookresearch/segment-anything.git), [Cutie](https://github.com/hkchengrex/Cutie.git), [GroundingDINO](https://github.com/IDEA-Research/GroundingDINO.git), [DEVA](https://github.com/hkchengrex/Tracking-Anything-with-DEVA.git), [VLPart](https://github.com/facebookresearch/VLPart.git), [OneFormer](https://github.com/SHI-Labs/OneFormer.git) and [MaskDINO](https://github.com/IDEA-Research/MaskDINO.git).
+ROS1 package for SOTA Computer Vision Models including [SAM](https://github.com/facebookresearch/segment-anything.git), [Cutie](https://github.com/hkchengrex/Cutie.git), [GroundingDINO](https://github.com/IDEA-Research/GroundingDINO.git), [DEVA](https://github.com/hkchengrex/Tracking-Anything-with-DEVA.git), [VLPart](https://github.com/facebookresearch/VLPart.git) and [MaskDINO](https://github.com/IDEA-Research/MaskDINO.git).
 
 ## Usage
 Tested : image of 480X640 30hz, 3090ti
