@@ -67,7 +67,7 @@ roslaunch deep_vision_ros sample_track.launch \
 #### 2. using docker
 You need to launch tracker and gui seperately cause docker doesn't have gui, so launch tracker by
 ```bash
-./run_docker -host pr1040 -launch track.launch \
+./run_docker -cache -host pr1040 -launch track.launch \
     input_image:=/kinect_head/rgb/image_rect_color \
     mode:=prompt \
     model_type:=vit_t \
@@ -76,6 +76,7 @@ You need to launch tracker and gui seperately cause docker doesn't have gui, so 
 where
 - `-host` : hostname like `pr1040` or `localhost`
 - `-launch` : launch file name to run
+- `-cache` : caching downloaded checkpoints
 
 and launch rqt gui on your gui machine by
 ```bash
@@ -91,9 +92,10 @@ roslaunch deep_vision_ros deva.launch \
 ```
 or
 ```bash
-./run_docker -host pr1040 -launch deva.launch \
+./run_docker -cache -host pr1040 -launch deva.launch \
     input_image:=/kinect_head/rgb/image_rect_color \
-    model_type:=vit_t \
+    dino_model_type=swinb \    
+    sam_model_type:=vit_t \
     device:=cuda:0
 ```
 and use dynamic reconfigure to set detection and object tracking by
