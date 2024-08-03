@@ -111,7 +111,7 @@ class YOLONode(ConnectionBasedTransport):
     def callback(self, img_msg):
         if self.detect_flag:
             image = self.bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            detections, visualization = self.gd_model.predict(image)
+            detections, visualization = self.model.predict(image)
             labels = [self.classes[i] for i in detections.class_id]
             segmentation = None
 
