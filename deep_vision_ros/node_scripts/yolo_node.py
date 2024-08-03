@@ -21,7 +21,7 @@ class YOLONode(ConnectionBasedTransport):
         super(YOLONode, self).__init__()
         self.get_mask = rospy.get_param("~get_mask", False)
         self.yolo_config = YOLOConfig.from_args(
-            model_type=rospy.get_param("~model_type", "yolov8x_worldv2"),
+            model_type=rospy.get_param("~yolo_model_type", "yolov8x_worldv2"),
             device=rospy.get_param("~device", "cuda:0"),
         )
         self.model = YOLOModel(self.yolo_config)
