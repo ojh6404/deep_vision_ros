@@ -11,8 +11,11 @@ sam_node publishes segmentation prompt which is used by cutie_node to track obje
 ### Detecting and tracking object using SAM, GroundingDINO and DEVA.
 ![Alt text](asset/deva_example.gif)
 
-deva_ndoe queries objects GroundingDINO and SAM at some intervals, so it can track new object after tracking is started. It runs ~15hz and you can adjust `cfg['detection_every']` for performance.
+deva_node queries objects GroundingDINO and SAM at some intervals, so it can track new object after tracking is started. It runs ~15hz and you can adjust `cfg['detection_every']` for performance.
 See [`node_scripts/model_config.py`](node_scripts/model_config.py)
+
+### Part detection and segmentation using VLPart.
+![Alt text](asset/vlpart.gif)
 
 ## Setup
 
@@ -119,6 +122,23 @@ or
 and use dynamic reconfigure to set detection and object tracking by
 ```bash
 rosrun dynamic_reconfigure dynparam set /deva_node classes "cloth; cup; bottle;"
+```
+
+### Detecting and Segmentation using VLPart.
+```bash
+roslaunch deep_vision_ros vlpart_segment.launch \
+    input_image:=/kinect_head/rgb/image_rect_color \
+    vocabulary:=custom \
+    classes:="cup handle; bottle cap;" \
+    device:=cuda:0
+```
+or
+```bash
+./run_docker -cache -host pr1040 -launch vlpart_segment.launch \
+    input_image:=/kinect_head/rgb/image_rect_color \
+    vocabulary:=custom \
+    classes:="cup handle; bottle cap;" \
+    device:=cuda:0
 ```
 
 ### TODO
