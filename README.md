@@ -37,6 +37,22 @@ cd deep_vision_ros/deep_vision_ros && ./prepare.sh
 cd ~/ros/catkin_ws && catkin b
 ```
 
+#### using anaconda (Recommended)
+You can build ROS package with anaconda environment.
+```bash
+sudo apt-get install libxml2-dev libxslt-dev libopenblas-dev libspatialindex-dev freeglut3-dev libsuitesparse-dev libblas-dev liblapack-dev libxcb-cursor0
+conda create -n ros-env python=3.9 -y
+conda activate ros-env
+pip install psutil==5.5.1 empy==3.3.2 rospkg gnupg pycryptodomex catkin-tools wheel cython # for ROS build
+mkdir -p ~/ros/catkin_ws/src && cd ~/ros/catkin_ws/src
+git clone https://github.com/ojh6404/deep_vision_ros.git
+wstool init
+wstool merge -t . deep_vision_ros/deep_vision_ros/rosinstall.noetic
+wstool update -t . # jsk-ros-pkg/jsk_visualization for GUI
+cd deep_vision_ros/deep_vision_ros && ./prepare.sh
+cd ~/ros/catkin_ws && catkin b
+```
+
 #### using docker (Recommended)
 Otherwise, you can build only `deep_vision_ros_utils` package for using intractive prompt gui
 ```bash
