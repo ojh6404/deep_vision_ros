@@ -19,6 +19,7 @@ See [`node_scripts/model_config.py`](node_scripts/model_config.py)
 ### Prerequisite
 This package is build upon
 - ROS1 (Noetic)
+- python3.9, python3.9-dev, python3.9-venv
 - catkin virtualenv (python>=3.9 used for DEVA)
 - (Optional) docker and nvidia-container-toolkit (for environment safety)
 
