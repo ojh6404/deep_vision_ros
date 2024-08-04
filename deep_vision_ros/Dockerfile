@@ -2,12 +2,6 @@ FROM nvidia/cuda:12.1.1-devel-ubuntu20.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN rm /etc/apt/sources.list.d/cuda.list
 
-RUN echo 'Etc/UTC' > /etc/timezone && \
-    ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime && \
-    apt-get update && \
-    apt-get install -q -y --no-install-recommends tzdata && \
-    rm -rf /var/lib/apt/lists/*
-
 # install essential packages
 RUN apt update && apt install -q -y --no-install-recommends \
     dirmngr \
@@ -15,33 +9,16 @@ RUN apt update && apt install -q -y --no-install-recommends \
     curl \
     wget \
     build-essential \
-    sudo \
     git \
     lsb-release \
     software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
-# get latest cmake
-RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-RUN add-apt-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-RUN apt-get update && apt-get install -y cmake
-
-RUN \
-  useradd user && \
-  echo "user ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/user && \
-  chmod 0440 /etc/sudoers.d/user && \
-  mkdir -p /home/user && \
-  chown user:user /home/user && \
-  chsh -s /bin/bash user
-
-RUN echo 'root:root' | chpasswd
-RUN echo 'user:user' | chpasswd
-
 # setup sources.list
-RUN sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 
 # setup keys
-RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
 
 # setup environment
 ENV LANG=C.UTF-8
@@ -66,6 +43,13 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
 
+# install python3.9
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    python3.9 \
+    python3.9-dev \
+    python3.9-venv \
+    && rm -rf /var/lib/apt/lists/*
+
 # install ros packages
 RUN apt update && apt install -y --no-install-recommends \
     ros-noetic-image-transport-plugins \
@@ -78,8 +62,6 @@ RUN apt update && apt install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y ros-noetic-jsk-pcl-ros ros-noetic-jsk-pcl-ros-utils &&\
     rm -rf /var/lib/apt/lists/*
 
-WORKDIR /home/user
-USER user
 SHELL ["/bin/bash", "-c"]
 
 
@@ -88,18 +70,21 @@ ENV BUILD_WITH_CUDA=True
 ENV CUDA_HOME=/usr/local/cuda/
 # trick for cuda because cuda is not available when building docker image
 ENV FORCE_CUDA="1" TORCH_CUDA_ARCH_LIST="5.0;6.0;6.1;7.0;7.5;8.0;8.6+PTX"
-# to use gdown, you need to add path to ~/.local/bin
-ENV PATH="$PATH:$HOME/.local/bin"
 
 ########################################
 ########### WORKSPACE BUILD ############
 ########################################
 # Installing catkin package
 RUN mkdir -p ~/catkin_ws/src
-RUN sudo rosdep init && rosdep update && sudo apt update
+RUN rosdep init && rosdep update && apt-get update
 RUN git config --global http.postBuffer 524288000  # Set a larger buffer size
 RUN git config --global core.compression 0         # Disable compression
-RUN git clone https://github.com/ojh6404/deep_vision_ros.git ~/catkin_ws/src
+RUN git clone https://github.com/ojh6404/deep_vision_ros.git ~/catkin_ws/src --recursive
+RUN cd ~/catkin_ws/src/deep_vision_ros &&\
+    python3.9 -m pip install numpy==1.26.4 psutil==5.9.8 scipy==1.13.1  &&\
+    python3.9 -m pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu121 &&\
+    python3.9 -m pip install -r requirements.txt &&\
+    python3.9 -m pip install -e VisionAnything
 RUN cd ~/catkin_ws/src/ &&\
     source /opt/ros/noetic/setup.bash &&\
     rosdep install --from-paths . -i -r -y &&\

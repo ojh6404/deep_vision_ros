@@ -8,13 +8,13 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Optional
 
-_DEEP_VISION_ROS_ROOT_INSIDE_CONTAINER = "/home/user/catkin_ws/src/deep_vision_ros"
-_TORCH_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/torch"
+_DEEP_VISION_ROS_ROOT_INSIDE_CONTAINER = "/root/catkin_ws/src/deep_vision_ros"
+_TORCH_CACHE_DIR_INSIDE_CONTAINER = "/root/.cache/torch"
 _TORCH_CACHE_DIR = os.getenv("TORCH_HOME", Path.home() / ".cache" / "torch")
-_HF_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/huggingface"
+_HF_CACHE_DIR_INSIDE_CONTAINER = "/root/.cache/huggingface"
 _HF_CACHE_DIR = os.getenv("HF_HOME", Path.home() / ".cache" / "huggingface")
 _VISION_ANYTHING_CACHE_DIR = os.path.expanduser("~/.cache/vision_anything")
-_VISION_ANYTHING_CACHE_DIR_INSIDE_CONTAINER = "/home/user/.cache/vision_anything"
+_VISION_ANYTHING_CACHE_DIR_INSIDE_CONTAINER = "/root/.cache/vision_anything"
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
