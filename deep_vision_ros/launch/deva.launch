@@ -12,7 +12,8 @@
     <remap from="~input_image" to="$(arg input_image)" />
     <rosparam subst_value="true" >
         device: $(arg device)
-        model_type: $(arg model_type)
+        dino_model_type: $(arg dino_model_type)
+        sam_model_type: $(arg sam_model_type)
         with_bbox: $(arg with_bbox)
     </rosparam>
   </node>
